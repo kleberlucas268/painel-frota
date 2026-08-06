@@ -1,0 +1,1050 @@
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+ 
+  :root{
+    --brand-green:#1C9B5E; --brand-blue:#1663A6; --brand-gold:#F2A900;
+    --st-green:#2FAE66; --st-orange:#E8721C; --st-red:#D8483B; --st-gray:#8A938C; --st-blue:#2E7FC1; --st-yellow:#EFAA1C;
+    --radius:14px; --radius-sm:9px;
+    --bg:#FFFFFF; --surface:#FFFFFF; --surface-alt:#F3F5F1; --border:#E4E9E0; --text:#16211C; --text-muted:#5C6C61;
+    --shadow: 0 1px 2px rgba(20,30,22,.04), 0 8px 24px -12px rgba(20,30,22,.12);
+  }
+  [data-theme="dark"]{ --bg:#0E1512; --surface:#161F1A; --surface-alt:#1D2921; --border:#2A3A31; --text:#EAF1EB; --text-muted:#93A69A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5); }
+  *{box-sizing:border-box;}
+  .bf-root{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex;}
+  .bf-root .mono{font-family:'IBM Plex Mono',monospace;} .bf-root .display{font-family:'Space Grotesk',sans-serif;}
+ 
+  .bf-sidebar{width:216px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:18px 12px; gap:4px; position:sticky; top:0; height:100vh; overflow-y:auto;}
+  .bf-brand{display:flex; align-items:center; gap:10px; padding:6px 8px 18px 8px;}
+  .bf-brand-mark{width:26px;height:30px; flex-shrink:0;}
+  .bf-brand-text{font-family:'Space Grotesk'; font-weight:700; font-size:15px; line-height:1.1;}
+  .bf-brand-text span{display:block; font-family:'Inter'; font-weight:500; font-size:10px; letter-spacing:.06em; color:var(--text-muted); text-transform:uppercase; margin-top:2px;}
+  .bf-nav-item{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:500; color:var(--text-muted); cursor:pointer; border:none; background:none; width:100%; text-align:left;}
+  .bf-nav-item svg{width:17px;height:17px; flex-shrink:0;}
+  .bf-nav-item:hover{background:var(--surface-alt); color:var(--text);}
+  .bf-nav-item.active{background:var(--brand-green); color:#fff;}
+ 
+  .bf-main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .bf-topbar{display:flex; align-items:center; gap:14px; padding:14px 24px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:30;}
+  .bf-search{flex:1; max-width:420px; display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 12px;}
+  .bf-search input{border:none; outline:none; background:none; color:var(--text); font-size:13px; width:100%;}
+  .bf-search svg{width:15px;height:15px; color:var(--text-muted); flex-shrink:0;}
+  .bf-topbar-title{font-family:'Space Grotesk'; font-weight:600; font-size:15px; margin-right:auto;}
+  .bf-icon-btn{width:34px;height:34px; border-radius:9px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); flex-shrink:0; position:relative;}
+  .bf-icon-btn svg{width:16px;height:16px;}
+  .bf-badge{position:absolute; top:-4px; right:-4px; background:var(--st-red); color:#fff; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 3px;}
+  .bf-notif-panel{position:absolute; top:52px; right:24px; width:320px; max-height:420px; overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); z-index:90; padding:8px;}
+  .bf-notif-item{padding:10px; border-radius:8px; cursor:pointer; font-size:12px;}
+  .bf-notif-item:hover{background:var(--surface-alt);}
+  .bf-notif-item b{font-size:12.5px;}
+  .bf-notif-item p{color:var(--text-muted); margin:3px 0 0;}
+ 
+  .bf-content{padding:22px 26px 60px;}
+  .bf-kpi-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:12px; margin-bottom:26px;}
+  .bf-kpi{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px 16px; position:relative; overflow:hidden; box-shadow:var(--shadow);}
+  .bf-kpi svg.leaf-wm{position:absolute; right:-10px; bottom:-14px; width:64px; height:64px; opacity:.06;}
+  .bf-kpi-value{font-family:'Space Grotesk'; font-weight:700; font-size:26px; line-height:1;}
+  .bf-kpi-label{font-size:11.5px; color:var(--text-muted); margin-top:6px; font-weight:500;}
+  .bf-kpi-dot{width:8px;height:8px;border-radius:50%; display:inline-block; margin-right:6px;}
+ 
+  .bf-section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+  .bf-section-title{font-family:'Space Grotesk'; font-weight:700; font-size:19px;}
+  .bf-section-sub{color:var(--text-muted); font-size:12.5px; margin-top:2px;}
+ 
+  .bf-btn{display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text);}
+  .bf-btn:hover{filter:brightness(0.96);}
+  [data-theme="dark"] .bf-btn:hover{filter:brightness(1.15);}
+  .bf-btn svg{width:14px;height:14px;}
+  .bf-btn-primary{background:var(--brand-green); border-color:var(--brand-green); color:#fff;}
+  .bf-btn-orange{background:var(--st-orange); border-color:var(--st-orange); color:#fff;}
+  .bf-btn-danger{background:var(--st-red); border-color:var(--st-red); color:#fff;}
+  .bf-btn-sm{padding:6px 10px; font-size:11.5px;}
+  .bf-btn-block{width:100%; justify-content:center;}
+ 
+  .bf-chips{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px;}
+  .bf-chip{padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-muted);}
+  .bf-chip.active{background:var(--text); color:var(--bg); border-color:var(--text);}
+ 
+  .bf-card-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(256px,1fr)); gap:14px;}
+  .bf-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border-top:4px solid var(--st-gray); display:flex; flex-direction:column;}
+  .bf-card-img{height:118px; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  .bf-card-img img{width:100%; height:100%; object-fit:cover;}
+  .bf-card-body{padding:13px 14px 14px;}
+  .bf-tag{font-family:'Space Grotesk'; font-weight:700; font-size:17px; letter-spacing:.01em;}
+  .bf-card-badge{font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; color:#fff; white-space:nowrap;}
+  .bf-card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
+  .bf-card-meta{margin-top:8px; font-size:11.5px; color:var(--text-muted); display:grid; grid-template-columns:1fr 1fr; gap:4px 8px;}
+  .bf-card-meta b{color:var(--text); font-weight:600;}
+  .bf-timer-chip{margin-top:8px; display:flex; align-items:center; gap:5px; background:var(--surface-alt); border-radius:7px; padding:5px 8px; font-size:10.5px; color:var(--text-muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+  .bf-timer-chip svg{width:12px;height:12px; flex-shrink:0;}
+  .bf-timer-chip .bf-timer-num{font-family:'IBM Plex Mono'; font-size:11.5px; font-weight:600; color:var(--text); margin-left:auto; flex-shrink:0;}
+  .bf-timer-chip .bf-timer-label{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bf-card-actions{display:flex; gap:7px; margin-top:11px;}
+ 
+  @keyframes bfRedPulse{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(216,72,59,.45); }
+    50%{ box-shadow: 0 0 0 5px rgba(216,72,59,0); }
+  }
+  .bf-card.bf-pulse-red{ animation: bfRedPulse 2.2s ease-in-out infinite; }
+ 
+  .bf-hamburger{display:none; width:34px;height:34px; border-radius:9px; border:1px solid var(--border); background:var(--surface); align-items:center; justify-content:center; cursor:pointer; color:var(--text); flex-shrink:0;}
+  .bf-hamburger svg{width:17px;height:17px;}
+  .bf-sidebar-backdrop{display:none;}
+ 
+  .bf-table-wrap{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
+  table.bf-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.bf-table th{text-align:left; padding:11px 14px; background:var(--surface-alt); color:var(--text-muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap;}
+  table.bf-table td{padding:10px 14px; border-top:1px solid var(--border); vertical-align:middle;}
+  table.bf-table tr:hover td{background:var(--surface-alt);}
+  .bf-status-pill{padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; color:#fff; display:inline-block; white-space:nowrap;}
+ 
+  .bf-overlay-center{position:fixed; inset:0; background:rgba(10,14,11,.5); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; z-index:120; padding:20px; animation:bfFade .15s ease;}
+  @keyframes bfFade{from{opacity:0} to{opacity:1}}
+  .bf-modal{width:min(560px,100%); max-height:92vh; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); animation:bfPop .18s ease;}
+  @keyframes bfPop{from{transform:scale(.97); opacity:.7} to{transform:scale(1); opacity:1}}
+  .bf-modal-head{display:flex; align-items:center; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg);}
+  .bf-modal-close{margin-left:auto; width:28px;height:28px;border-radius:8px;border:1px solid var(--border); background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .bf-modal-body{padding:18px 20px 24px;}
+  .bf-field{margin-bottom:12px;}
+  .bf-field label{display:block; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted); margin-bottom:5px;}
+  .bf-field input, .bf-field select, .bf-field textarea{width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12.5px; font-family:inherit;}
+  .bf-field textarea{resize:vertical; min-height:56px;}
+  .bf-field-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 14px;}
+  .bf-radio-group{display:flex; gap:16px;}
+  .bf-radio-opt{display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;}
+  .bf-divider{display:flex; align-items:center; gap:10px; margin:16px 0 10px;}
+  .bf-divider b{font-family:'Space Grotesk'; font-weight:700; font-size:12.5px; white-space:nowrap; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em;}
+  .bf-divider .line{height:1px; background:var(--border); flex:1;}
+  .bf-photo-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .bf-photo-btn{flex:1; min-width:150px; border:1.5px dashed var(--border); border-radius:10px; padding:14px 8px; text-align:center; cursor:pointer; background:var(--surface); font-size:11.5px; font-weight:600;}
+  .bf-photo-btn svg{width:18px;height:18px; margin-bottom:5px; color:var(--text-muted);}
+  .bf-photo-btn.has-photo{border-style:solid; border-color:var(--st-green);}
+  .bf-photo-thumb{width:100%; height:70px; object-fit:cover; border-radius:8px; margin-bottom:6px;}
+ 
+  .bf-timeline{position:relative; padding-left:22px;}
+  .bf-timeline::before{content:'';position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:var(--border);}
+  .bf-tl-item{position:relative; padding-bottom:16px;}
+  .bf-tl-item:last-child{padding-bottom:0;}
+  .bf-tl-dot{position:absolute; left:-22px; top:2px; width:12px;height:12px;border-radius:50%; background:var(--brand-green); border:2px solid var(--bg);}
+  .bf-tl-date{font-size:10.5px; color:var(--text-muted); font-family:'IBM Plex Mono';}
+  .bf-tl-title{font-size:12.5px; font-weight:600; margin-top:1px;}
+  .bf-tl-user{font-size:11px; color:var(--text-muted); margin-top:1px;}
+ 
+  .bf-drop{border:1.5px dashed var(--border); border-radius:var(--radius); padding:34px 20px; text-align:center; background:var(--surface); cursor:pointer;}
+  .bf-drop svg{width:30px;height:30px; color:var(--text-muted); margin-bottom:8px;}
+  .bf-drop b{font-size:13.5px;} .bf-drop p{font-size:11.5px; color:var(--text-muted); margin-top:4px;}
+ 
+  .bf-empty{padding:50px 20px; text-align:center; color:var(--text-muted); font-size:13px;}
+  .bf-empty svg{width:34px;height:34px; margin-bottom:10px; opacity:.5;}
+ 
+  .bf-reg-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);}
+  .bf-reg-row:last-child{border-bottom:none;}
+  .bf-reg-thumb{width:40px;height:40px;border-radius:8px; background:var(--surface-alt); overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .bf-reg-thumb img{width:100%;height:100%;object-fit:cover;}
+  .bf-x{cursor:pointer; color:var(--text-muted); width:15px;height:15px; flex-shrink:0;}
+  .bf-x:hover{color:var(--st-red);}
+ 
+  .bf-toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:10px 18px; border-radius:9px; font-size:12.5px; font-weight:600; z-index:200; box-shadow:0 8px 24px rgba(0,0,0,.25);}
+ 
+  .bf-import-table-wrap{overflow-x:auto;}
+  .bf-import-table td, .bf-import-table th{white-space:nowrap;}
+  .bf-mini-select{padding:5px 7px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:11px; max-width:130px;}
+  .bf-mini-thumb{width:34px;height:34px;border-radius:6px; overflow:hidden; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .bf-mini-thumb img{width:100%;height:100%;object-fit:cover;}
+ 
+  @media (max-width:860px){
+    .bf-hamburger{display:flex;}
+    .bf-sidebar{position:fixed; left:0; top:0; z-index:70; transform:translateX(-100%); transition:transform .2s ease; box-shadow:var(--shadow);}
+    .bf-sidebar.open{transform:translateX(0);}
+    .bf-sidebar-backdrop.open{display:block; position:fixed; inset:0; background:rgba(10,14,11,.4); z-index:65;}
+    .bf-topbar{padding:12px 14px; gap:8px;}
+    .bf-topbar-title{display:none;}
+    .bf-search{max-width:none;}
+    .bf-search input{font-size:12px;}
+    .bf-content{padding:16px 14px 50px;}
+    .bf-kpi-grid{grid-template-columns:repeat(2,1fr); gap:9px;}
+    .bf-card-grid{grid-template-columns:1fr;}
+    .bf-field-grid{grid-template-columns:1fr;}
+    .bf-notif-panel{right:10px; left:10px; width:auto;}
+    .bf-modal{width:100%;}
+    table.bf-table{font-size:11.5px;}
+    .bf-table-wrap{overflow-x:auto;}
+  }
+  @media (min-width:861px) and (max-width:1180px){
+    .bf-kpi-grid{grid-template-columns:repeat(3,1fr);}
+    .bf-card-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+  }
+</style>
+ 
+<div id="bf-app" class="bf-root" data-theme="light"></div>
+ 
+<script>
+(function(){
+  const ROOT = document.getElementById('bf-app');
+ 
+  const ICONS = {
+    dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+    truck:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h11v9H2z"/><path d="M13 10h4l4 3v3h-8z"/><circle cx="6.5" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+    clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+    bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>',
+    alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+    box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+    cog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.23.5.7.85 1.25 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>',
+    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>',
+    x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>',
+    cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>',
+    edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
+  };
+  function brandMark(){
+    return '<svg class="bf-brand-mark" viewBox="0 0 26 30" fill="none"><path d="M22 2C10 2 3 10 3 22c0 .7.5 1.2 1.2 1.2C15 23.2 22 15 22 2z" fill="var(--brand-green)"/><path d="M15 6C8 9 5 15 5 22" stroke="var(--brand-blue)" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="8" cy="24" r="3.4" fill="var(--brand-gold)"/></svg>';
+  }
+ 
+  const ASSET_STATUS = {
+    rodando:{label:'Rodando', color:'var(--st-green)'},
+    checklist:{label:'Realizando Checklist', color:'var(--st-orange)'},
+    parado:{label:'Parado', color:'var(--st-red)'}
+  };
+  const SC_STATUS = ['Pendente','Solicitado','Em Cotação','Pendente de Aprovação','Comprado','Entregue'];
+  const CHECKLIST_ALERT_DAYS = 7;
+  const SC_ALERT_DAYS = 3;
+ 
+  /* ==================================================================
+     CONFIGURAÇÃO DO FIREBASE — PREENCHA COM OS DADOS DO SEU PROJETO
+     (Console do Firebase > Configurações do projeto > Seus apps > SDK)
+     ================================================================== */
+
+     const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyB8XzRZDHgmutl3kNZ8GkXjeSm1NWnU95Y",
+    authDomain: "painel-frota-784f5.firebaseapp.com",
+    projectId: "painel-frota-784f5",
+    storageBucket: "painel-frota-784f5.firebasestorage.app",
+    messagingSenderId: "419884163209",
+    appId: "1:419884163209:web:57c311252eda58e5996658"
+};
+
+  let db = null;
+  let fbReady = false;
+  try{
+    if(FIREBASE_CONFIG.apiKey !== "COLE_AQUI"){
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      fbReady = true;
+    }
+  }catch(e){ console.error('Firebase não configurado corretamente', e); }
+  const COL = 'bomfuturo_frota';
+  const DOCS = {assets:'assets', checklists:'checklists', solicitacoes:'solicitacoes', condutores:'condutores', models:'models'};
+ 
+  let state = {
+    theme:'light', view:'dashboard',
+    assets:[], checklists:[], solicitacoes:[], condutores:[], models:{},
+    search:'', filter:'todos',
+    checklistFilters:{numero:'',tag:'',condutor:'',executante:'',modelo:'',descricao:'',placa:'',status:'',de:'',ate:''},
+    checklistModalAssetId:null, finalizeAssetId:null, notifOpen:false,
+    importRows:null, importMap:null,
+    loaded:false
+  };
+ 
+  const uid = ()=>Math.random().toString(36).slice(2,10);
+  const nowParts = ()=>{ const d=new Date(); return {data:d.toLocaleDateString('pt-BR'), hora:d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}; };
+  const esc = (s)=>(s===undefined||s===null)?'':String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(msg){ const t=document.createElement('div'); t.className='bf-toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+  function normalize(s){ return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' '); }
+ 
+  /* ---------------- STORAGE (Firebase Firestore, tempo real, sem login) ---------------- */
+  function loadTheme(){ try{ const t=localStorage.getItem('bf-theme'); if(t) state.theme=t; }catch(e){} }
+  function persistTheme(){ try{ localStorage.setItem('bf-theme', state.theme); }catch(e){} }
+ 
+  async function loadState(){
+    loadTheme();
+    if(!fbReady){ state.loaded=true; state.configMissing=true; render(); return; }
+    const keys = Object.keys(DOCS);
+    await Promise.all(keys.map(async k=>{
+      try{
+        const snap = await db.collection(COL).doc(DOCS[k]).get();
+        if(snap.exists){ const d=snap.data(); state[k]= d.value ? JSON.parse(d.value) : (k==='models'?{}:[]); }
+      }catch(e){ console.error('Erro lendo', k, e); }
+    }));
+    state.loaded=true; render();
+    setInterval(tickTimers, 1000);
+    attachRealtimeListeners();
+  }
+  function attachRealtimeListeners(){
+    Object.keys(DOCS).forEach(k=>{
+      db.collection(COL).doc(DOCS[k]).onSnapshot(snap=>{
+        if(!snap.exists) return;
+        const d = snap.data();
+        const parsed = d.value ? JSON.parse(d.value) : (k==='models'?{}:[]);
+        if(JSON.stringify(parsed) === JSON.stringify(state[k])) return;
+        state[k] = parsed;
+        flushOrDeferRender();
+      }, err=>console.error('Listener erro', k, err));
+    });
+  }
+  function isUserEditing(){
+    const el = document.activeElement;
+    if(!el || !ROOT.contains(el)) return false;
+    return ['INPUT','TEXTAREA','SELECT'].includes(el.tagName);
+  }
+  let deferredRenderPending = false;
+  function flushOrDeferRender(){
+    const busy = state.checklistModalAssetId || state.finalizeAssetId || state.historicoOpenId || state.importRows || isUserEditing();
+    if(busy){
+      if(!deferredRenderPending){
+        deferredRenderPending = true;
+        const check = setInterval(()=>{
+          const stillBusy = state.checklistModalAssetId || state.finalizeAssetId || state.historicoOpenId || state.importRows || isUserEditing();
+          if(!stillBusy){ clearInterval(check); deferredRenderPending=false; render(); }
+        }, 1500);
+      }
+      return;
+    }
+    render();
+  }
+  async function saveDoc(key){
+    if(!fbReady){ toast('Firebase não configurado — veja as instruções no topo do arquivo'); return; }
+    try{ await db.collection(COL).doc(DOCS[key]).set({value: JSON.stringify(state[key]), updatedAt: Date.now()}); }
+    catch(e){ toast('Falha ao salvar — verifique sua conexão'); }
+  }
+  async function saveAssets(){ await saveDoc('assets'); }
+  async function saveChecklists(){ await saveDoc('checklists'); }
+  async function saveSolic(){ await saveDoc('solicitacoes'); }
+  async function saveCondutores(){ await saveDoc('condutores'); }
+  async function saveModels(){ await saveDoc('models'); }
+  function saveTheme(){ persistTheme(); }
+ 
+  /* ---------------- HELPERS ---------------- */
+  function condutorNome(id){ const c=state.condutores.find(x=>x.id===id); return c?c.nome:''; }
+  function assetImage(a){ return a.modelo && state.models[a.modelo] ? state.models[a.modelo] : null; }
+  function fmtMs(ms){
+    if(ms<0) ms=0;
+    const s=Math.floor(ms/1000); const h=Math.floor(s/3600); const m=Math.floor((s%3600)/60); const sec=s%60;
+    return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');
+  }
+  function activeChecklistOf(a){ return a.checklistAtual ? state.checklists.find(c=>c.id===a.checklistAtual) : null; }
+  function lastFinishedChecklistOf(a){
+    const list = state.checklists.filter(c=>c.assetId===a.id && c.status==='finalizado').sort((x,y)=>(y.fimTs||0)-(x.fimTs||0));
+    return list[0]||null;
+  }
+  function daysSince(ts){ if(!ts) return null; return Math.floor((Date.now()-ts)/86400000); }
+  function checklistOverdueDays(a){
+    const last = lastFinishedChecklistOf(a);
+    const ref = last ? last.fimTs : (a.addedTs||Date.now());
+    return daysSince(ref);
+  }
+  function checklistAlerts(){
+    return state.assets.filter(a=>{
+      const d = checklistOverdueDays(a);
+      return d!==null && d>=CHECKLIST_ALERT_DAYS && a.status!=='checklist';
+    });
+  }
+  function solicAlerts(){
+    return state.solicitacoes.filter(s=>{
+      if(s.status==='Entregue') return false;
+      const lastUpd = s.historico && s.historico[0] ? s.historico[0].ts : s.createdTs;
+      return daysSince(lastUpd) >= SC_ALERT_DAYS;
+    });
+  }
+  function allAlerts(){
+    const a1 = checklistAlerts().map(a=>({type:'checklist', asset:a, msg:`Checklist semanal pendente. Solicitar ao condutor a parada do veículo para realização do checklist.`}));
+    const a2 = solicAlerts().map(s=>({type:'solic', solic:s, msg:`A Solicitação de Peças da TAG ${(state.assets.find(a=>a.id===s.assetId)||{}).tag||'?'} está há mais de ${SC_ALERT_DAYS} dias sem atualização. Favor verificar o andamento.`}));
+    return a1.concat(a2);
+  }
+ 
+  function addSolicHistory(s, novoStatus){
+    s.historico = s.historico||[];
+    const np = nowParts();
+    s.historico.unshift({id:uid(), data:np.data, hora:np.hora, ts:Date.now(), usuario:'Usuário', statusAnterior:s.status||null, novoStatus});
+  }
+ 
+  /* ---------------- RENDER SHELL ---------------- */
+  function render(){
+    ROOT.setAttribute('data-theme', state.theme);
+    ROOT.innerHTML = `
+      ${renderSidebar()}
+      <div class="bf-main">
+        ${renderTopbar()}
+        <div class="bf-content">${renderView()}</div>
+      </div>
+      ${state.checklistModalAssetId ? renderChecklistModal() : ''}
+      ${state.finalizeAssetId ? renderFinalizeModal() : ''}
+      ${state.notifOpen ? renderNotifPanel() : ''}
+    `;
+    bindEvents();
+  }
+ 
+  const NAV = [
+    {id:'dashboard', label:'Dashboard', icon:'dash'},
+    {id:'frota', label:'Frota', icon:'truck'},
+    {id:'checklist', label:'Checklist', icon:'check'},
+    {id:'historico', label:'Histórico de Checklists', icon:'clock'},
+    {id:'alertas', label:'Alertas', icon:'alert'},
+    {id:'solicitacoes', label:'Solicitação de Peças', icon:'box'},
+    {id:'importar', label:'Importar Ativos', icon:'upload'},
+    {id:'condutores', label:'Condutores', icon:'users'},
+    {id:'config', label:'Configurações', icon:'cog'},
+  ];
+  const ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
+  function renderSidebar(){
+    return `<div class="bf-sidebar-backdrop ${state.sidebarOpen?'open':''}" id="bf-sidebar-backdrop"></div>
+    <div class="bf-sidebar ${state.sidebarOpen?'open':''}">
+      <div class="bf-brand">${brandMark()}<div class="bf-brand-text">Bom Futuro<span>Gestão de Frota</span></div></div>
+      ${NAV.map(n=>`<button class="bf-nav-item ${state.view===n.id?'active':''}" data-nav="${n.id}">${ICONS[n.icon]}<span>${n.label}</span></button>`).join('')}
+    </div>`;
+  }
+  function renderTopbar(){
+    const titles={dashboard:'Visão geral', frota:'Frota', checklist:'Checklist', historico:'Histórico de checklists', alertas:'Alertas', solicitacoes:'Solicitação de peças', importar:'Importar ativos', condutores:'Condutores', config:'Configurações'};
+    const alerts = allAlerts();
+    return `<div class="bf-topbar">
+      <button class="bf-hamburger" id="bf-hamburger">${ICON_MENU}</button>
+      <div class="bf-topbar-title">${titles[state.view]||''}</div>
+      <div class="bf-search">${ICONS.search}<input id="bf-search-input" placeholder="Buscar por TAG, modelo, placa, condutor..." value="${esc(state.search)}"/></div>
+      <button class="bf-icon-btn" id="bf-notif-btn" title="Notificações">${ICONS.bell}${alerts.length?`<span class="bf-badge">${alerts.length}</span>`:''}</button>
+      <button class="bf-icon-btn" id="bf-theme-toggle" title="Alternar tema">${state.theme==='light'?ICONS.moon:ICONS.sun}</button>
+    </div>`;
+  }
+  function renderNotifPanel(){
+    const alerts = allAlerts();
+    return `<div class="bf-notif-panel" id="bf-notif-panel">
+      ${alerts.length? alerts.map((al,i)=>`
+        <div class="bf-notif-item" data-notif="${i}">
+          <b>${al.type==='checklist'? 'TAG '+esc(al.asset.tag) : 'SC '+esc(al.solic.numero||'—')}</b>
+          <p>${esc(al.msg)}</p>
+        </div>`).join('') : `<div class="bf-notif-item">Nenhum alerta pendente.</div>`}
+    </div>`;
+  }
+ 
+  function renderView(){
+    if(!state.loaded) return `<div class="bf-empty">Carregando dados da frota...</div>`;
+    if(state.configMissing) return `<div class="bf-empty" style="max-width:520px; margin:0 auto;">${ICONS.alert}
+      <div><b>Firebase ainda não configurado.</b></div>
+      <p style="margin-top:8px; font-size:12.5px; line-height:1.6;">Abra o arquivo .html, encontre <span class="mono">FIREBASE_CONFIG</span> no início do script e cole as chaves do seu projeto Firebase (Console do Firebase → Configurações do projeto → Seus apps → SDK). Depois disso, os dados passam a ficar salvos e sincronizados em tempo real para todos que acessarem o link.</p>
+    </div>`;
+    switch(state.view){
+      case 'dashboard': return renderDashboard();
+      case 'frota': return renderFrota(false);
+      case 'checklist': return renderFrota(true);
+      case 'historico': return renderHistorico();
+      case 'alertas': return renderAlertas();
+      case 'solicitacoes': return renderSolicitacoes();
+      case 'importar': return renderImportar();
+      case 'condutores': return renderCondutores();
+      case 'config': return renderConfig();
+      default: return '';
+    }
+  }
+ 
+  /* ---------------- DASHBOARD ---------------- */
+  function renderDashboard(){
+    const as = state.assets;
+    const k = {
+      total:as.length,
+      rodando:as.filter(a=>a.status==='rodando').length,
+      checklist:as.filter(a=>a.status==='checklist').length,
+      parado:as.filter(a=>a.status==='parado').length,
+      alertasChecklist:checklistAlerts().length,
+      solicPendentes:state.solicitacoes.filter(s=>s.status!=='Entregue').length,
+      solicAtrasadas:solicAlerts().length,
+    };
+    if(!as.length){
+      return `<div class="bf-empty">${ICONS.empty}<div><b>Nenhum ativo cadastrado ainda.</b><br/>Importe a planilha de ativos para começar.</div>
+        <div style="margin-top:14px;"><button class="bf-btn bf-btn-primary" data-nav="importar">${ICONS.upload} Importar ativos</button></div></div>`;
+    }
+    const cards=[['Total de Ativos',k.total,'var(--brand-blue)'],['Rodando',k.rodando,'var(--st-green)'],['Realizando Checklist',k.checklist,'var(--st-orange)'],['Parado',k.parado,'var(--st-red)'],['Alertas de Checklist',k.alertasChecklist,'var(--st-red)'],['Solicitações Pendentes',k.solicPendentes,'var(--st-yellow)'],['Solicitações Atrasadas',k.solicAtrasadas,'var(--st-red)']];
+    return `<div class="bf-kpi-grid">${cards.map(([l,v,c])=>`<div class="bf-kpi">${ICONS.empty.replace('<svg ','<svg class="leaf-wm" ')}<div class="bf-kpi-value">${v}</div><div class="bf-kpi-label"><span class="bf-kpi-dot" style="background:${c}"></span>${l}</div></div>`).join('')}</div>
+    <div class="bf-section-head"><div><div class="bf-section-title">Alertas recentes</div><div class="bf-section-sub">Ativos que precisam de atenção agora</div></div></div>
+    ${checklistAlerts().length? renderAssetGrid(checklistAlerts().slice(0,6)) : `<div class="bf-section-sub">Nenhum ativo com checklist em atraso.</div>`}`;
+  }
+ 
+  /* ---------------- FROTA / CHECKLIST ---------------- */
+  function filteredAssets(){
+    let list = state.assets;
+    if(state.filter!=='todos') list = list.filter(a=>a.status===state.filter);
+    if(state.filterDescricao) list = list.filter(a=>a.descricao===state.filterDescricao);
+    if(state.search.trim()){
+      const q=state.search.toLowerCase();
+      list = list.filter(a=>[a.tag,a.descricao,a.modelo,a.placa,condutorNome(a.condutorId)].some(f=>(f||'').toString().toLowerCase().includes(q)));
+    }
+    return list;
+  }
+  function renderFrota(isChecklistTab){
+    const chips=[['todos','Todos'],['rodando','Rodando'],['checklist','Realizando Checklist'],['parado','Parado']];
+    const list = filteredAssets();
+    if(!state.assets.length) return `<div class="bf-empty">${ICONS.empty}<div>Nenhum ativo cadastrado ainda.</div><div style="margin-top:14px;"><button class="bf-btn bf-btn-primary" data-nav="importar">${ICONS.upload} Importar ativos</button></div></div>`;
+    const descricoes = [...new Set(state.assets.map(a=>a.descricao).filter(Boolean))].sort();
+    return `<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <div class="bf-chips" style="margin-bottom:0;">${chips.map(([k,l])=>`<div class="bf-chip ${state.filter===k?'active':''}" data-filter="${k}">${l}</div>`).join('')}</div>
+      <select id="bf-filter-descricao" style="margin-left:auto; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600;">
+        <option value="">Todas as descrições</option>
+        ${descricoes.map(d=>`<option value="${esc(d)}" ${state.filterDescricao===d?'selected':''}>${esc(d)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="bf-section-sub" style="margin-bottom:12px;">${list.length} de ${state.assets.length} ativos</div>
+    ${list.length? renderAssetGrid(list, isChecklistTab) : `<div class="bf-empty">${ICONS.empty}<div>Nenhum ativo encontrado.</div></div>`}`;
+  }
+  function renderAssetGrid(list, isChecklistTab){
+    return `<div class="bf-card-grid">${list.map(a=>assetCardHtml(a, isChecklistTab)).join('')}</div>`;
+  }
+  function assetCardHtml(a, isChecklistTab){
+    const meta = ASSET_STATUS[a.status]||ASSET_STATUS.rodando;
+    const img = assetImage(a);
+    const active = activeChecklistOf(a);
+    const last = lastFinishedChecklistOf(a);
+    const pulse = a.status==='parado' ? ' bf-pulse-red' : '';
+    return `<div class="bf-card${pulse}" style="border-top-color:${meta.color}">
+      <div class="bf-card-img">${img?`<img src="${img}"/>`:`<div style="color:var(--text-muted)">${ICONS.truck}</div>`}</div>
+      <div class="bf-card-body">
+        <div class="bf-card-top"><div class="bf-tag">${esc(a.tag)}</div><span class="bf-card-badge" style="background:${meta.color}">${meta.label}</span></div>
+        <div class="bf-card-meta">
+          <div>Descrição: <b>${esc(a.descricao)||'-'}</b></div>
+          <div>Modelo: <b>${esc(a.modelo)||'-'}</b></div>
+          <div>Placa: <b class="mono">${esc(a.placa)||'-'}</b></div>
+          <div>Ano: <b class="mono">${esc(a.ano)||'-'}</b></div>
+          <div>Condutor: <b>${esc(condutorNome(a.condutorId))||'-'}</b></div>
+          <div>Últ. checklist: <b class="mono">${last?esc(last.numero):'-'}</b></div>
+        </div>
+        ${active? `<div class="bf-timer-chip">${ICONS.clock}<span class="bf-timer-label mono">${esc(active.numero)}</span><b class="bf-timer-num bf-timer" data-timer-start="${active.inicioTs}">00:00:00</b></div>`:''}
+        ${isChecklistTab ? `<div class="bf-card-actions">
+          ${a.status==='checklist' ? `
+            <button class="bf-btn bf-btn-sm" style="flex:1;" data-edit-checklist="${a.id}">${ICONS.edit} Editar</button>
+            <button class="bf-btn bf-btn-danger bf-btn-sm" style="flex:1;" data-finalize="${a.id}">Finalizar</button>
+          ` : `<button class="bf-btn bf-btn-orange bf-btn-sm bf-btn-block" data-start-checklist="${a.id}">${ICONS.check} Realizar Checklist</button>`}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }
+ 
+  /* ---------------- CHECKLIST MODAL ---------------- */
+  function renderChecklistModal(){
+    const a = state.assets.find(x=>x.id===state.checklistModalAssetId);
+    if(!a) return '';
+    const active = activeChecklistOf(a);
+    const c = active || {numero:'', executante:'', observacoes:'', terceirizacao:{sim:false,motivo:''}, solicitacaoPecas:{sim:false}, fotos:{}};
+    const img = assetImage(a);
+    return `<div class="bf-overlay-center" id="bf-checklist-overlay">
+      <div class="bf-modal">
+        <div class="bf-modal-head"><b class="display" style="font-size:14.5px;">${active?'Editar Checklist':'Realizar Checklist'}</b><button class="bf-modal-close" id="bf-checklist-close">${ICONS.x}</button></div>
+        <div class="bf-modal-body">
+          <div class="bf-card-img" style="border-radius:10px; height:120px; margin-bottom:12px;">${img?`<img src="${img}"/>`:`<div style="color:var(--text-muted)">${ICONS.truck}</div>`}</div>
+          <div class="bf-field-grid" style="margin-bottom:6px;">
+            <div class="bf-field"><label>TAG</label><div class="mono" style="font-weight:700;">${esc(a.tag)}</div></div>
+            <div class="bf-field"><label>Placa</label><div class="mono">${esc(a.placa)||'—'}</div></div>
+            <div class="bf-field"><label>Descrição</label><div>${esc(a.descricao)||'—'}</div></div>
+            <div class="bf-field"><label>Modelo</label><div>${esc(a.modelo)||'—'}</div></div>
+            <div class="bf-field"><label>Ano</label><div>${esc(a.ano)||'—'}</div></div>
+            <div class="bf-field"><label>Condutor</label><div>${esc(condutorNome(a.condutorId))||'—'}</div></div>
+          </div>
+ 
+          <div class="bf-divider"><b>Checklist</b><div class="line"></div></div>
+          <div class="bf-field"><label>Número do checklist *</label><input id="cl-numero" placeholder="CHK-2026-000001" value="${esc(c.numero)}" ${active?'readonly':''}/></div>
+          <div class="bf-field"><label>Executante</label><input id="cl-executante" value="${esc(c.executante)}"/></div>
+          <div class="bf-field"><label>Observações</label><textarea id="cl-observacoes">${esc(c.observacoes)}</textarea></div>
+ 
+          <div class="bf-divider"><b>Terceirização</b><div class="line"></div></div>
+          <div class="bf-field"><label>Necessita de terceirização?</label>
+            <div class="bf-radio-group">
+              <label class="bf-radio-opt"><input type="radio" name="cl-terc" value="sim" ${c.terceirizacao.sim?'checked':''}/> Sim</label>
+              <label class="bf-radio-opt"><input type="radio" name="cl-terc" value="nao" ${!c.terceirizacao.sim?'checked':''}/> Não</label>
+            </div>
+          </div>
+          <div class="bf-field" id="cl-terc-motivo-wrap" style="${c.terceirizacao.sim?'':'display:none;'}"><label>Informe o motivo da terceirização</label><textarea id="cl-terc-motivo">${esc(c.terceirizacao.motivo)}</textarea></div>
+ 
+          <div class="bf-divider"><b>Solicitação de peças</b><div class="line"></div></div>
+          <div class="bf-field"><label>Será necessário solicitar peças?</label>
+            <div class="bf-radio-group">
+              <label class="bf-radio-opt"><input type="radio" name="cl-pecas" value="sim" ${c.solicitacaoPecas.sim?'checked':''}/> Sim</label>
+              <label class="bf-radio-opt"><input type="radio" name="cl-pecas" value="nao" ${!c.solicitacaoPecas.sim?'checked':''}/> Não</label>
+            </div>
+          </div>
+ 
+          <div class="bf-divider"><b>Fotos</b><div class="line"></div></div>
+          <div class="bf-photo-row">
+            ${photoInputHtml('checklist', c.fotos.checklist, 'Tirar foto do Checklist')}
+            ${photoInputHtml('os', c.fotos.os, 'Tirar foto da Ordem de Serviço')}
+          </div>
+          <div class="bf-photo-row" id="cl-pecas-foto-wrap" style="margin-top:8px; ${c.solicitacaoPecas.sim?'':'display:none;'}">
+            ${photoInputHtml('solicitacaoPecas', c.fotos.solicitacaoPecas, 'Tirar foto da Solicitação de Peças')}
+          </div>
+ 
+          <div style="margin-top:18px; text-align:right;">
+            <button class="bf-btn bf-btn-primary" id="bf-checklist-save">${active?'Salvar':'Iniciar Checklist'}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  function photoInputHtml(key, dataUrl, label){
+    return `<label class="bf-photo-btn ${dataUrl?'has-photo':''}">
+      ${dataUrl?`<img class="bf-photo-thumb" src="${dataUrl}"/>`:ICONS.cam}
+      <div>${label}</div>
+      <input type="file" accept="image/*" capture="environment" data-photo="${key}" style="display:none;"/>
+    </label>`;
+  }
+ 
+  function renderFinalizeModal(){
+    const a = state.assets.find(x=>x.id===state.finalizeAssetId);
+    if(!a) return '';
+    const c = activeChecklistOf(a);
+    return `<div class="bf-overlay-center" id="bf-finalize-overlay">
+      <div class="bf-modal" style="width:min(420px,100%);">
+        <div class="bf-modal-head"><b class="display" style="font-size:14.5px;">Finalizar checklist</b><button class="bf-modal-close" id="bf-finalize-close">${ICONS.x}</button></div>
+        <div class="bf-modal-body">
+          <p style="font-size:13px; margin:0 0 14px;">Tem certeza que deseja finalizar o Checklist do ativo?</p>
+          <div class="bf-field-grid">
+            <div class="bf-field"><label>TAG</label><div class="mono" style="font-weight:700;">${esc(a.tag)}</div></div>
+            <div class="bf-field"><label>Nº Checklist</label><div class="mono">${esc(c?.numero)||'—'}</div></div>
+            <div class="bf-field" style="grid-column:1/-1;"><label>Descrição</label><div>${esc(a.descricao)||'—'}</div></div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button class="bf-btn bf-btn-block" id="bf-finalize-cancel">Cancelar</button>
+            <button class="bf-btn bf-btn-primary bf-btn-block" id="bf-finalize-confirm">Sim, Finalizar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+ 
+  /* ---------------- HISTORICO ---------------- */
+  function historicoFiltered(){
+    let list = state.checklists.filter(c=>c.status==='finalizado');
+    const f = state.checklistFilters;
+    const getAsset = c=>state.assets.find(a=>a.id===c.assetId)||{};
+    if(f.numero) list = list.filter(c=>normalize(c.numero).includes(normalize(f.numero)));
+    if(f.tag) list = list.filter(c=>normalize(getAsset(c).tag).includes(normalize(f.tag)));
+    if(f.condutor) list = list.filter(c=>normalize(condutorNome(getAsset(c).condutorId)).includes(normalize(f.condutor)));
+    if(f.executante) list = list.filter(c=>normalize(c.executante).includes(normalize(f.executante)));
+    if(f.modelo) list = list.filter(c=>normalize(getAsset(c).modelo).includes(normalize(f.modelo)));
+    if(f.descricao) list = list.filter(c=>normalize(getAsset(c).descricao).includes(normalize(f.descricao)));
+    if(f.placa) list = list.filter(c=>normalize(getAsset(c).placa).includes(normalize(f.placa)));
+    if(f.de) list = list.filter(c=> c.inicioTs >= new Date(f.de).getTime());
+    if(f.ate) list = list.filter(c=> c.inicioTs <= new Date(f.ate).getTime()+86400000);
+    return list.sort((x,y)=>(y.fimTs||0)-(x.fimTs||0));
+  }
+  function renderHistorico(){
+    const f = state.checklistFilters;
+    const list = historicoFiltered();
+    return `
+    <div class="bf-table-wrap" style="padding:14px 16px; margin-bottom:16px;">
+      <div class="bf-field-grid" style="grid-template-columns:repeat(4,1fr); gap:8px 10px;">
+        ${filterInput('numero','Nº Checklist',f.numero)}
+        ${filterInput('tag','TAG',f.tag)}
+        ${filterInput('condutor','Condutor',f.condutor)}
+        ${filterInput('executante','Executante',f.executante)}
+        ${filterInput('modelo','Modelo',f.modelo)}
+        ${filterInput('descricao','Descrição',f.descricao)}
+        ${filterInput('placa','Placa',f.placa)}
+        <div class="bf-field"><label>De</label><input type="date" data-cf="de" value="${f.de}"/></div>
+        <div class="bf-field"><label>Até</label><input type="date" data-cf="ate" value="${f.ate}"/></div>
+      </div>
+    </div>
+    ${list.length? `<div class="bf-table-wrap"><table class="bf-table"><thead><tr><th>Nº Checklist</th><th>TAG</th><th>Descrição</th><th>Condutor</th><th>Executante</th><th>Início</th><th>Fim</th><th>Tempo total</th></tr></thead>
+      <tbody>${list.map(c=>{const a=state.assets.find(x=>x.id===c.assetId)||{}; return `<tr data-hist-open="${c.id}" style="cursor:pointer;">
+        <td class="mono">${esc(c.numero)}</td><td class="mono">${esc(a.tag)}</td><td>${esc(a.descricao)}</td><td>${esc(condutorNome(a.condutorId))}</td><td>${esc(c.executante)}</td>
+        <td>${esc(c.inicioData)} ${esc(c.inicioHora)}</td><td>${esc(c.fimData)} ${esc(c.fimHora)}</td><td class="mono">${fmtMs(c.tempoTotalMs||0)}</td></tr>`;}).join('')}</tbody></table></div>`
+      : `<div class="bf-empty">${ICONS.empty}<div>Nenhum checklist finalizado encontrado com esses filtros.</div></div>`}
+    ${state.historicoOpenId ? renderHistoricoDetail() : ''}
+    `;
+  }
+  function filterInput(key,label,val){
+    return `<div class="bf-field"><label>${label}</label><input data-cf="${key}" value="${esc(val)}"/></div>`;
+  }
+  function renderHistoricoDetail(){
+    const c = state.checklists.find(x=>x.id===state.historicoOpenId);
+    if(!c) return '';
+    const a = state.assets.find(x=>x.id===c.assetId)||{};
+    return `<div class="bf-overlay-center" id="bf-hist-overlay">
+      <div class="bf-modal">
+        <div class="bf-modal-head"><b class="display" style="font-size:14.5px;">Checklist ${esc(c.numero)}</b><button class="bf-modal-close" id="bf-hist-close">${ICONS.x}</button></div>
+        <div class="bf-modal-body">
+          <div class="bf-card-img" style="border-radius:10px; height:120px; margin-bottom:12px;">${assetImage(a)?`<img src="${assetImage(a)}"/>`:`<div style="color:var(--text-muted)">${ICONS.truck}</div>`}</div>
+          <div class="bf-field-grid">
+            ${fieldRO('TAG',a.tag)}${fieldRO('Descrição',a.descricao)}${fieldRO('Condutor',condutorNome(a.condutorId))}${fieldRO('Executante',c.executante)}
+            ${fieldRO('Início',`${c.inicioData} ${c.inicioHora}`)}${fieldRO('Fim',`${c.fimData} ${c.fimHora}`)}${fieldRO('Tempo total',fmtMs(c.tempoTotalMs||0))}${fieldRO('Terceirização',c.terceirizacao?.sim?('Sim — '+(c.terceirizacao.motivo||'')):'Não')}
+          </div>
+          <div class="bf-field"><label>Observações</label><div style="font-size:12.5px;">${esc(c.observacoes)||'—'}</div></div>
+          <div class="bf-divider"><b>Fotos</b><div class="line"></div></div>
+          <div class="bf-photo-row">
+            ${c.fotos?.checklist?`<img class="bf-photo-thumb" style="height:100px; flex:1;" src="${c.fotos.checklist}"/>`:''}
+            ${c.fotos?.os?`<img class="bf-photo-thumb" style="height:100px; flex:1;" src="${c.fotos.os}"/>`:''}
+            ${c.fotos?.solicitacaoPecas?`<img class="bf-photo-thumb" style="height:100px; flex:1;" src="${c.fotos.solicitacaoPecas}"/>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  function fieldRO(label,val){ return `<div class="bf-field"><label>${label}</label><div style="font-size:12.5px; font-weight:500;">${esc(val)===''?'—':esc(val)}</div></div>`; }
+ 
+  /* ---------------- ALERTAS ---------------- */
+  function renderAlertas(){
+    const list = checklistAlerts();
+    if(!list.length) return `<div class="bf-empty">${ICONS.empty}<div>Nenhum ativo com checklist em atraso. Tudo em dia!</div></div>`;
+    return `<div class="bf-card-grid">${list.map(a=>{
+      const last = lastFinishedChecklistOf(a);
+      const d = checklistOverdueDays(a);
+      return `<div class="bf-card bf-pulse-red" style="border-top-color:var(--st-red)">
+        <div class="bf-card-img">${assetImage(a)?`<img src="${assetImage(a)}"/>`:`<div style="color:var(--text-muted)">${ICONS.truck}</div>`}</div>
+        <div class="bf-card-body">
+          <div class="bf-card-top"><div class="bf-tag">${esc(a.tag)}</div><span class="bf-card-badge" style="background:var(--st-red)">Checklist não realizado</span></div>
+          <div class="bf-card-meta">
+            <div>Descrição: <b>${esc(a.descricao)||'-'}</b></div>
+            <div>Modelo: <b>${esc(a.modelo)||'-'}</b></div>
+            <div>Placa: <b class="mono">${esc(a.placa)||'-'}</b></div>
+            <div>Condutor: <b>${esc(condutorNome(a.condutorId))||'-'}</b></div>
+          </div>
+          <div class="bf-section-sub" style="margin-top:8px;">${last?`Último checklist: <span class="mono">${esc(last.numero)}</span> em ${esc(last.fimData)}`:'Não possui histórico de checklist.'}</div>
+          <div class="bf-section-sub" style="margin-top:2px;">Dias sem checklist: <b style="color:var(--st-red);">${d}</b></div>
+          <div class="bf-card-actions"><button class="bf-btn bf-btn-orange bf-btn-sm bf-btn-block" data-start-checklist="${a.id}">${ICONS.check} Realizar Checklist</button></div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+ 
+  /* ---------------- SOLICITACOES ---------------- */
+  function renderSolicitacoes(){
+    const list = state.solicitacoes.slice().sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
+    if(!list.length) return `<div class="bf-empty">${ICONS.empty}<div>Nenhuma solicitação de peças ainda. Elas são criadas automaticamente durante um checklist.</div></div>`;
+    return `<div class="bf-card-grid">${list.map(s=>{
+      const a = state.assets.find(x=>x.id===s.assetId)||{};
+      const c = state.checklists.find(x=>x.id===s.checklistId)||{};
+      const overdue = daysSince(s.historico&&s.historico[0]?s.historico[0].ts:s.createdTs) >= SC_ALERT_DAYS && s.status!=='Entregue';
+      return `<div class="bf-card" style="border-top-color:${overdue?'var(--st-red)':'var(--brand-blue)'}">
+        <div class="bf-card-img">${assetImage(a)?`<img src="${assetImage(a)}"/>`:`<div style="color:var(--text-muted)">${ICONS.truck}</div>`}</div>
+        <div class="bf-card-body">
+          <div class="bf-card-top"><div class="bf-tag">${esc(a.tag)}</div><span class="bf-card-badge" style="background:${overdue?'var(--st-red)':'var(--st-blue)'}">${esc(s.status)}</span></div>
+          <div class="bf-card-meta">
+            <div>Descrição: <b>${esc(a.descricao)||'-'}</b></div>
+            <div>Condutor: <b>${esc(condutorNome(a.condutorId))||'-'}</b></div>
+            <div>Executante: <b>${esc(c.executante)||'-'}</b></div>
+            <div>Nº Checklist: <b class="mono">${esc(c.numero)||'-'}</b></div>
+            <div>Data: <b class="mono">${esc(s.data)}</b></div>
+            <div>Nº SC: <b class="mono">${esc(s.numero)||'—'}</b></div>
+          </div>
+          <div class="bf-field" style="margin-top:9px;"><label>Alterar status</label>
+            <select data-solic-status="${s.id}">${SC_STATUS.map(st=>`<option ${s.status===st?'selected':''}>${st}</option>`).join('')}</select>
+          </div>
+          <div class="bf-field" style="margin-top:7px;"><label>Nº Solicitação de Compra (SC)</label><input data-solic-numero="${s.id}" value="${esc(s.numero)}"/></div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+ 
+  /* ---------------- IMPORTAR ATIVOS ---------------- */
+  const IMPORT_FIELDS = {tag:['tag'], descricao:['descricao'], modelo:['modelo'], placa:['placa'], ano:['ano']};
+  function mapHeadersExact(headerRow){
+    const map = {};
+    headerRow.forEach((raw, idx)=>{
+      const h = normalize(raw);
+      Object.entries(IMPORT_FIELDS).forEach(([field,pats])=>{
+        if(map[field]===undefined && pats.includes(h)) map[field]=idx;
+      });
+    });
+    return map;
+  }
+  function findHeaderRowExact(rows){
+    let bestIdx=0, bestScore=-1;
+    for(let i=0;i<Math.min(rows.length,10);i++){
+      const score = Object.keys(mapHeadersExact(rows[i]||[])).length;
+      if(score>bestScore){bestScore=score; bestIdx=i;}
+    }
+    return bestIdx;
+  }
+  function renderImportar(){
+    const pending = state.importRows ? `
+      <div class="bf-section-sub" style="margin:16px 0 10px;">Pré-visualização da importação — colunas reconhecidas: <span class="mono">${Object.keys(state.importMap).join(', ')||'nenhuma'}</span>. Demais colunas da planilha são ignoradas.</div>
+      <div class="bf-import-table-wrap bf-table-wrap"><table class="bf-table bf-import-table">
+        <thead><tr><th>Imagem</th><th>TAG</th><th>Descrição</th><th>Modelo</th><th>Placa</th><th>Ano</th><th>Condutor</th></tr></thead>
+        <tbody>${state.importRows.map((r,i)=>`<tr>
+          <td><label class="bf-mini-thumb">${state.models[r.modelo]?`<img src="${state.models[r.modelo]}"/>`:ICONS.truck}<input type="file" accept="image/*" data-import-img="${i}" style="display:none;"/></label></td>
+          <td class="mono">${esc(r.tag)}</td><td>${esc(r.descricao)}</td><td>${esc(r.modelo)}</td><td class="mono">${esc(r.placa)}</td><td class="mono">${esc(r.ano)}</td>
+          <td><select class="bf-mini-select" data-import-condutor="${i}"><option value="">—</option>${state.condutores.map(c=>`<option value="${c.id}" ${r.condutorId===c.id?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+      <div style="margin:14px 0 26px; display:flex; gap:10px;">
+        <button class="bf-btn bf-btn-primary" id="bf-save-import">Salvar Tudo</button>
+        <button class="bf-btn" id="bf-cancel-import">Cancelar</button>
+      </div>` : '';
+ 
+    const savedTable = state.assets.length ? `
+      <div class="bf-section-head" style="margin-top:${state.importRows?'0':'22px'};">
+        <div><div class="bf-section-title" style="font-size:15.5px;">Ativos importados</div><div class="bf-section-sub">${state.assets.length} ativo(s) salvo(s). Imagem e condutor ficam salvos aqui mesmo após novas importações.</div></div>
+      </div>
+      <div class="bf-import-table-wrap bf-table-wrap"><table class="bf-table bf-import-table">
+        <thead><tr><th>Imagem</th><th>TAG</th><th>Descrição</th><th>Modelo</th><th>Placa</th><th>Ano</th><th>Condutor</th></tr></thead>
+        <tbody>${state.assets.map(a=>`<tr>
+          <td><label class="bf-mini-thumb">${state.models[a.modelo]?`<img src="${state.models[a.modelo]}"/>`:ICONS.truck}<input type="file" accept="image/*" data-saved-img="${esc(a.modelo)}" style="display:none;"/></label></td>
+          <td class="mono">${esc(a.tag)}</td><td>${esc(a.descricao)}</td><td>${esc(a.modelo)}</td><td class="mono">${esc(a.placa)}</td><td class="mono">${esc(a.ano)}</td>
+          <td><select class="bf-mini-select" data-saved-condutor="${a.id}"><option value="">—</option>${state.condutores.map(c=>`<option value="${c.id}" ${a.condutorId===c.id?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></td>
+        </tr>`).join('')}</tbody>
+      </table></div>` : '';
+ 
+    return `<div>
+      <div class="bf-drop" id="bf-drop" style="max-width:600px;">${ICONS.upload}<div><b>Clique para selecionar a planilha de ativos</b></div><p>O sistema reconhece automaticamente apenas: TAG, Descrição, Modelo, Placa, Ano. As demais colunas são ignoradas.</p><input type="file" id="bf-file-input" accept=".xlsx,.xls,.csv" style="display:none"/></div>
+      ${pending}
+      ${savedTable || (state.importRows? '' : `<div class="bf-section-sub" style="margin-top:14px;">Depois de importar, associe uma imagem por modelo (compartilhada entre todos os veículos daquele modelo) e um condutor por veículo. Essas associações permanecem salvas mesmo em novas importações.</div>`)}
+    </div>`;
+  }
+  function handleImportFile(file){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''});
+        const headerIdx = findHeaderRowExact(raw);
+        const map = mapHeadersExact(raw[headerIdx]||[]);
+        const dataRows = raw.slice(headerIdx+1).filter(r=>r.some(c=>String(c||'').trim()!==''));
+        const rows = dataRows.map(r=>{
+          const rec = {};
+          Object.entries(map).forEach(([field,idx])=>{ rec[field]=String(r[idx]||'').trim(); });
+          const existing = state.assets.find(a=> rec.tag && a.tag===rec.tag);
+          rec.condutorId = existing ? existing.condutorId : '';
+          return rec;
+        }).filter(r=>r.tag);
+        if(!rows.length){ toast('Não encontrei as colunas TAG/Descrição/Modelo/Placa/Ano nesta planilha.'); return; }
+        state.importRows = rows; state.importMap = map; render();
+      }catch(err){ toast('Não foi possível ler o arquivo.'); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+ 
+  /* ---------------- CONDUTORES ---------------- */
+  function renderCondutores(){
+    const q = normalize(state.condutorSearch||'');
+    const list = state.condutores.filter(c=>!q || normalize(c.nome).includes(q));
+    return `
+    <div class="bf-field" style="max-width:320px; margin-bottom:14px;"><label>Pesquisar condutor</label><input id="bf-condutor-search" value="${esc(state.condutorSearch||'')}"/></div>
+    <div class="bf-table-wrap" style="padding:16px;">
+      ${list.length? list.map(c=>`<div class="bf-reg-row">
+        <div style="flex:1;">
+          <input data-condutor-edit="${c.id}" value="${esc(c.nome)}" style="border:none; background:none; font-weight:600; font-size:13px; color:var(--text); width:100%;"/>
+        </div>
+        <svg class="bf-x" data-del-condutor="${c.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>`).join('') : `<div class="bf-section-sub" style="padding:10px 0;">Nenhum condutor cadastrado ainda.</div>`}
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <input id="new-condutor-name" placeholder="Nome do condutor" style="flex:1; padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12.5px;"/>
+        <button class="bf-btn bf-btn-primary" id="bf-add-condutor">${ICONS.plus} Cadastrar</button>
+      </div>
+    </div>`;
+  }
+ 
+  /* ---------------- CONFIG ---------------- */
+  function renderConfig(){
+    return `<div style="max-width:520px; display:flex; flex-direction:column; gap:18px;">
+      <div class="bf-table-wrap" style="padding:16px;">
+        <b class="display" style="font-size:14px;">Aparência</b>
+        <div class="bf-section-sub" style="margin-bottom:10px;">Tema salvo neste navegador.</div>
+        <div style="display:flex; gap:8px;">
+          <button class="bf-btn ${state.theme==='light'?'bf-btn-primary':''}" data-set-theme="light">${ICONS.sun} Claro</button>
+          <button class="bf-btn ${state.theme==='dark'?'bf-btn-primary':''}" data-set-theme="dark">${ICONS.moon} Escuro</button>
+        </div>
+      </div>
+      <div class="bf-table-wrap" style="padding:16px; border-color:var(--st-red);">
+        <b class="display" style="font-size:14px; color:var(--st-red);">Zona de risco</b>
+        <div class="bf-section-sub" style="margin-bottom:10px;">Remove ativos, checklists, solicitações, condutores e imagens. Não pode ser desfeito.</div>
+        <button class="bf-btn bf-btn-danger" id="bf-clear-all">${ICONS.trash} Limpar todos os dados</button>
+      </div>
+    </div>`;
+  }
+ 
+  /* ---------------- TIMER TICK ---------------- */
+  function tickTimers(){
+    document.querySelectorAll('.bf-timer[data-timer-start]').forEach(el=>{
+      const start = +el.dataset.timerStart;
+      el.textContent = fmtMs(Date.now()-start);
+    });
+  }
+ 
+  /* ---------------- EVENTS ---------------- */
+  function bindEvents(){
+    ROOT.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click', ()=>{ state.view=el.dataset.nav; state.importRows=null; state.notifOpen=false; state.sidebarOpen=false; render(); }));
+    const hamburger = ROOT.querySelector('#bf-hamburger'); if(hamburger) hamburger.addEventListener('click', ()=>{ state.sidebarOpen=!state.sidebarOpen; render(); });
+    const sbBackdrop = ROOT.querySelector('#bf-sidebar-backdrop'); if(sbBackdrop) sbBackdrop.addEventListener('click', ()=>{ state.sidebarOpen=false; render(); });
+    const themeBtn=ROOT.querySelector('#bf-theme-toggle'); if(themeBtn) themeBtn.addEventListener('click', ()=>{ state.theme=state.theme==='light'?'dark':'light'; saveTheme(); render(); });
+    const searchInput=ROOT.querySelector('#bf-search-input'); if(searchInput) searchInput.addEventListener('input',(e)=>{ state.search=e.target.value; render(); const el=ROOT.querySelector('#bf-search-input'); if(el){el.focus(); el.setSelectionRange(state.search.length,state.search.length);} });
+    ROOT.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('click', ()=>{ state.filter=el.dataset.filter; render(); }));
+    const descSel = ROOT.querySelector('#bf-filter-descricao'); if(descSel) descSel.addEventListener('change', ()=>{ state.filterDescricao=descSel.value; render(); });
+ 
+    const notifBtn = ROOT.querySelector('#bf-notif-btn'); if(notifBtn) notifBtn.addEventListener('click',(e)=>{ e.stopPropagation(); state.notifOpen=!state.notifOpen; render(); });
+    ROOT.querySelectorAll('[data-notif]').forEach(el=>el.addEventListener('click', ()=>{
+      const al = allAlerts()[+el.dataset.notif];
+      state.notifOpen=false;
+      if(al.type==='checklist'){ state.view='frota'; state.search=al.asset.tag; }
+      else { state.view='solicitacoes'; state.search=''; }
+      render();
+    }));
+ 
+    // start / edit / finalize checklist
+    ROOT.querySelectorAll('[data-start-checklist],[data-edit-checklist]').forEach(el=>el.addEventListener('click', ()=>{
+      state.checklistModalAssetId = el.dataset.startChecklist || el.dataset.editChecklist; render();
+    }));
+    ROOT.querySelectorAll('[data-finalize]').forEach(el=>el.addEventListener('click', ()=>{ state.finalizeAssetId = el.dataset.finalize; render(); }));
+    const clClose = ROOT.querySelector('#bf-checklist-close'); if(clClose) clClose.addEventListener('click', ()=>{ state.checklistModalAssetId=null; render(); });
+    const clOverlay = ROOT.querySelector('#bf-checklist-overlay'); if(clOverlay) clOverlay.addEventListener('click',(e)=>{ if(e.target===clOverlay){ state.checklistModalAssetId=null; render(); } });
+ 
+    ROOT.querySelectorAll('input[name="cl-terc"]').forEach(el=>el.addEventListener('change',()=>{
+      const wrap = ROOT.querySelector('#cl-terc-motivo-wrap'); if(wrap) wrap.style.display = (ROOT.querySelector('input[name="cl-terc"]:checked').value==='sim')?'block':'none';
+    }));
+    ROOT.querySelectorAll('input[name="cl-pecas"]').forEach(el=>el.addEventListener('change',()=>{
+      const wrap = ROOT.querySelector('#cl-pecas-foto-wrap'); if(wrap) wrap.style.display = (ROOT.querySelector('input[name="cl-pecas"]:checked').value==='sim')?'flex':'none';
+    }));
+    ROOT.querySelectorAll('[data-photo]').forEach(el=>el.addEventListener('change', (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ()=>{ el.closest('.bf-photo-btn').classList.add('has-photo'); el.dataset.dataurl = r.result; const img=document.createElement('img'); img.className='bf-photo-thumb'; img.src=r.result; el.closest('.bf-photo-btn').prepend(img); const camIcon = el.closest('.bf-photo-btn').querySelector('svg'); if(camIcon) camIcon.remove(); };
+      r.readAsDataURL(f);
+    }));
+ 
+    const clSave = ROOT.querySelector('#bf-checklist-save');
+    if(clSave) clSave.addEventListener('click', ()=>{
+      const a = state.assets.find(x=>x.id===state.checklistModalAssetId);
+      if(!a) return;
+      const numero = ROOT.querySelector('#cl-numero').value.trim();
+      if(!numero){ toast('Informe o número do checklist'); return; }
+      const executante = ROOT.querySelector('#cl-executante').value.trim();
+      const observacoes = ROOT.querySelector('#cl-observacoes').value;
+      const tercSim = ROOT.querySelector('input[name="cl-terc"]:checked').value==='sim';
+      const tercMotivo = ROOT.querySelector('#cl-terc-motivo') ? ROOT.querySelector('#cl-terc-motivo').value : '';
+      const pecasSim = ROOT.querySelector('input[name="cl-pecas"]:checked').value==='sim';
+      const getPhoto = (key, prevVal)=>{ const el = ROOT.querySelector(`[data-photo="${key}"]`); return el && el.dataset.dataurl ? el.dataset.dataurl : prevVal; };
+ 
+      let c = activeChecklistOf(a);
+      if(!c){
+        const np = nowParts();
+        c = {id:uid(), assetId:a.id, numero, executante, observacoes, status:'andamento',
+          terceirizacao:{sim:tercSim, motivo:tercMotivo}, solicitacaoPecas:{sim:pecasSim},
+          fotos:{checklist:getPhoto('checklist'), os:getPhoto('os'), solicitacaoPecas:getPhoto('solicitacaoPecas')},
+          inicioData:np.data, inicioHora:np.hora, inicioTs:Date.now()};
+        state.checklists.push(c);
+        a.checklistAtual = c.id; a.status='checklist'; a.addedTs = a.addedTs||Date.now();
+        if(pecasSim){
+          const sp = {id:uid(), assetId:a.id, checklistId:c.id, numero:'', data:np.data, status:'Pendente', createdTs:Date.now(), historico:[]};
+          addSolicHistory(sp,'Pendente');
+          state.solicitacoes.push(sp);
+          saveSolic();
+        }
+        toast('Checklist iniciado');
+      } else {
+        c.executante = executante; c.observacoes = observacoes;
+        c.terceirizacao = {sim:tercSim, motivo:tercMotivo};
+        const wasPecas = c.solicitacaoPecas.sim;
+        c.solicitacaoPecas = {sim:pecasSim};
+        c.fotos = {checklist:getPhoto('checklist',c.fotos.checklist), os:getPhoto('os',c.fotos.os), solicitacaoPecas:getPhoto('solicitacaoPecas',c.fotos.solicitacaoPecas)};
+        if(pecasSim && !wasPecas){
+          const np = nowParts();
+          const sp = {id:uid(), assetId:a.id, checklistId:c.id, numero:'', data:np.data, status:'Pendente', createdTs:Date.now(), historico:[]};
+          addSolicHistory(sp,'Pendente');
+          state.solicitacoes.push(sp); saveSolic();
+        }
+        toast('Checklist atualizado');
+      }
+      state.checklistModalAssetId=null;
+      saveChecklists(); saveAssets(); render();
+    });
+ 
+    const fzCancel = ROOT.querySelector('#bf-finalize-cancel'); if(fzCancel) fzCancel.addEventListener('click', ()=>{ state.finalizeAssetId=null; render(); });
+    const fzClose = ROOT.querySelector('#bf-finalize-close'); if(fzClose) fzClose.addEventListener('click', ()=>{ state.finalizeAssetId=null; render(); });
+    const fzConfirm = ROOT.querySelector('#bf-finalize-confirm');
+    if(fzConfirm) fzConfirm.addEventListener('click', ()=>{
+      const a = state.assets.find(x=>x.id===state.finalizeAssetId);
+      const c = activeChecklistOf(a);
+      if(c){ const np=nowParts(); c.fimData=np.data; c.fimHora=np.hora; c.fimTs=Date.now(); c.tempoTotalMs=c.fimTs-c.inicioTs; c.status='finalizado'; }
+      a.checklistAtual=null; a.status='rodando';
+      state.finalizeAssetId=null;
+      saveChecklists(); saveAssets(); render();
+      toast('Veículo liberado com sucesso.');
+    });
+ 
+    // historico filters
+    ROOT.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('input', ()=>{ state.checklistFilters[el.dataset.cf]=el.value; render(); }));
+    ROOT.querySelectorAll('[data-hist-open]').forEach(el=>el.addEventListener('click', ()=>{ state.historicoOpenId=el.dataset.histOpen; render(); }));
+    const histClose = ROOT.querySelector('#bf-hist-close'); if(histClose) histClose.addEventListener('click', ()=>{ state.historicoOpenId=null; render(); });
+    const histOverlay = ROOT.querySelector('#bf-hist-overlay'); if(histOverlay) histOverlay.addEventListener('click',(e)=>{ if(e.target===histOverlay){ state.historicoOpenId=null; render(); } });
+ 
+    // solicitacoes
+    ROOT.querySelectorAll('[data-solic-status]').forEach(el=>el.addEventListener('change', ()=>{
+      const s = state.solicitacoes.find(x=>x.id===el.dataset.solicStatus);
+      if(s && s.status!==el.value){ addSolicHistory(s, el.value); s.status=el.value; saveSolic(); render(); toast('Status atualizado'); }
+    }));
+    ROOT.querySelectorAll('[data-solic-numero]').forEach(el=>el.addEventListener('change', ()=>{
+      const s = state.solicitacoes.find(x=>x.id===el.dataset.solicNumero);
+      if(s){ s.numero = el.value.trim(); saveSolic(); }
+    }));
+ 
+    // import
+    const drop = ROOT.querySelector('#bf-drop'); const fileInput = ROOT.querySelector('#bf-file-input');
+    if(drop) drop.addEventListener('click', ()=>fileInput.click());
+    if(fileInput) fileInput.addEventListener('change', (e)=>{ if(e.target.files[0]) handleImportFile(e.target.files[0]); });
+    ROOT.querySelectorAll('[data-import-img]').forEach(el=>el.addEventListener('change', (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      const idx = +el.dataset.importImg; const modelo = state.importRows[idx].modelo;
+      const r = new FileReader(); r.onload = ()=>{ state.models[modelo]=r.result; render(); }; r.readAsDataURL(f);
+    }));
+    ROOT.querySelectorAll('[data-import-condutor]').forEach(el=>el.addEventListener('change', ()=>{ state.importRows[+el.dataset.importCondutor].condutorId = el.value; }));
+    const saveImportBtn = ROOT.querySelector('#bf-save-import');
+    if(saveImportBtn) saveImportBtn.addEventListener('click', async ()=>{
+      state.importRows.forEach(r=>{
+        let a = state.assets.find(x=>x.tag===r.tag);
+        if(!a){ a={id:uid(), tag:r.tag, addedTs:Date.now(), status:'rodando', checklistAtual:null}; state.assets.push(a); }
+        a.descricao=r.descricao; a.modelo=r.modelo; a.placa=r.placa; a.ano=r.ano; a.condutorId=r.condutorId||a.condutorId||'';
+      });
+      await saveAssets(); await saveModels();
+      state.importRows=null; state.importMap=null; render();
+      toast('Ativos importados e salvos');
+    });
+    const cancelImportBtn = ROOT.querySelector('#bf-cancel-import');
+    if(cancelImportBtn) cancelImportBtn.addEventListener('click', ()=>{ state.importRows=null; state.importMap=null; render(); });
+    ROOT.querySelectorAll('[data-saved-img]').forEach(el=>el.addEventListener('change', (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      const modelo = el.dataset.savedImg;
+      const r = new FileReader(); r.onload = ()=>{ state.models[modelo]=r.result; saveModels(); render(); }; r.readAsDataURL(f);
+    }));
+    ROOT.querySelectorAll('[data-saved-condutor]').forEach(el=>el.addEventListener('change', ()=>{
+      const a = state.assets.find(x=>x.id===el.dataset.savedCondutor);
+      if(a){ a.condutorId = el.value; saveAssets(); }
+    }));
+ 
+    // condutores
+    const condSearch = ROOT.querySelector('#bf-condutor-search'); if(condSearch) condSearch.addEventListener('input', (e)=>{ state.condutorSearch=e.target.value; render(); });
+    const addCondBtn = ROOT.querySelector('#bf-add-condutor');
+    if(addCondBtn) addCondBtn.addEventListener('click', ()=>{
+      const name = ROOT.querySelector('#new-condutor-name').value.trim();
+      if(!name) return;
+      state.condutores.push({id:uid(), nome:name}); saveCondutores(); render();
+    });
+    ROOT.querySelectorAll('[data-condutor-edit]').forEach(el=>el.addEventListener('change', ()=>{
+      const c = state.condutores.find(x=>x.id===el.dataset.condutorEdit); if(c){ c.nome=el.value.trim(); saveCondutores(); }
+    }));
+    ROOT.querySelectorAll('[data-del-condutor]').forEach(el=>el.addEventListener('click', ()=>{
+      state.condutores = state.condutores.filter(c=>c.id!==el.dataset.delCondutor); saveCondutores(); render();
+    }));
+ 
+    // config
+    ROOT.querySelectorAll('[data-set-theme]').forEach(el=>el.addEventListener('click', ()=>{ state.theme=el.dataset.setTheme; saveTheme(); render(); }));
+    const clearBtn = ROOT.querySelector('#bf-clear-all');
+    if(clearBtn) clearBtn.addEventListener('click', async ()=>{
+      const conf = window.prompt('Esta ação apagará TODOS os dados (ativos, checklists, solicitações, condutores e imagens) e não pode ser desfeita.\n\nDigite CONFIRMAR para prosseguir:');
+      if(conf==='CONFIRMAR'){
+        state.assets=[]; state.checklists=[]; state.solicitacoes=[]; state.condutores=[]; state.models={};
+        await saveAssets(); await saveChecklists(); await saveSolic(); await saveCondutores(); await saveModels();
+        toast('Todos os dados foram apagados'); state.view='dashboard'; render();
+      }
+    });
+ 
+    document.addEventListener('click', function closeNotif(e){
+      if(state.notifOpen && !e.target.closest('#bf-notif-panel') && !e.target.closest('#bf-notif-btn')){ state.notifOpen=false; render(); }
+    }, {once:true});
+  }
+ 
+  loadState();
+})();
+</script>
+ 
