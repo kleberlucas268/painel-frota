@@ -12,8 +12,9 @@
     {
       "binding": "FLEET_DB",
       "database_name": "painel-monitoramento-frota",
-      "database_id": "PREENCHER_COM_ID_DO_D1",
+      "database_id": "1089bd20-3ae7-472a-9a94-ff99cccb59ea",
       "migrations_dir": "migrations"
     }
   ]
 }
+
