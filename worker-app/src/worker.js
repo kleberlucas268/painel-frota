@@ -31,6 +31,7 @@ function sanitizeVehicle(input) {
     plate: boundedString(source.plate, 20),
     model: boundedString(source.model, 140),
     driver: boundedString(source.driver, 120),
+    tripStatus: boundedString(source.tripStatus, 80),
     type: allowedTypes.includes(source.type) ? source.type : "other",
     unit: unit,
     current: finiteOrNull(source.current),
