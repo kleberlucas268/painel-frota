@@ -295,7 +295,7 @@
               '<span class="metric-detail">' + escapeHtml(maintenance) + "</span></div>" +
           "</div>" +
           '<div class="progress-section"><div class="progress-heading"><strong>' + escapeHtml(remainingText(vehicle)) + '</strong><span>' + Math.round(pct) + "% do ciclo</span></div>" +
-            '<div class="progress-track" role="img" aria-label="' + Math.round(pct) + "% do intervalo percorrido">' + progressSegments(pct, vehicle.tolerance, vehicle.interval) + "</div>" +
+            '<div class="progress-track" role="img" aria-label="' + Math.round(pct) + '% do intervalo percorrido">' + progressSegments(pct, vehicle.tolerance, vehicle.interval) + "</div>" +
             '<div class="tolerance-row"><span>Intervalo <strong>' + escapeHtml(vehicle.interval == null ? "—" : formatNumber(vehicle.interval) + " " + vehicle.unit) + "</strong></span>" +
               '<span>Tolerância <strong>' + escapeHtml(toleranceLabel) + (vehicle.toleranceEstimated ? " · referência" : "") + "</strong></span></div></div>" +
           '<div class="feature-footer"><span class="maintenance-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6a4 4 0 0 0-5.4 5.4l-5.1 5.1a2 2 0 0 0 2.8 2.8l5.1-5.1A4 4 0 0 0 17 8.8L14.5 11l-2.5-2.5L14 6Z"/></svg>' + escapeHtml(maintenance) + "</span>" +
