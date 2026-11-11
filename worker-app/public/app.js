@@ -109,7 +109,8 @@
     const plate = String(pick(row, aliases.plate) || "").trim().toUpperCase();
     const assetCode = getAssetCode(rawAsset);
     const model = String(pick(row, aliases.model) || pick(row, aliases.description) || "Modelo não informado").trim();
-    const driver = String(pick(row, aliases.driver) || "").trim();
+    const driverValue = String(pick(row, aliases.driver) || "").trim();
+    const driver = /^[-–—]$/.test(driverValue) ? "" : driverValue;
     const current = toNumber(pick(row, aliases.current));
     const lastService = toNumber(pick(row, aliases.next));
     const reportedRemaining = toNumber(pick(row, aliases.remaining));
