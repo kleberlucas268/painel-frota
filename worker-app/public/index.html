@@ -15,10 +15,18 @@
   <div class="page-glow page-glow--one"></div>
   <div class="page-glow page-glow--two"></div>
   <main class="app-shell">
+    <nav class="side-nav" aria-label="Atalhos da frota">
+      <button class="side-nav-button is-active" data-side-filter="all" type="button" aria-label="Todos os veículos" title="Todos os veículos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-7 9 7v9H3zM9 20v-6h6v6"/></svg></button>
+      <button class="side-nav-button" data-side-filter="urgent" type="button" aria-label="Revisões próximas" title="Revisões próximas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6a4 4 0 0 0-5.4 5.4l-5.1 5.1a2 2 0 0 0 2.8 2.8l5.1-5.1A4 4 0 0 0 17 8.8L14.5 11l-2.5-2.5L14 6Z"/></svg></button>
+      <button class="side-nav-button" data-side-filter="truck" type="button" aria-label="Caminhões" title="Caminhões"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button class="side-nav-button" data-side-filter="moto" type="button" aria-label="Motocicletas" title="Motocicletas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="m6 17 4-7h4l4 7m-8-7 3 7h5m-4-9h3"/></svg></button>
+      <button class="side-nav-button" data-side-filter="bus" type="button" aria-label="Ônibus" title="Ônibus"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="15" rx="2"/><path d="M4 13h16M8 19v2m8-2v2M7 8h10"/></svg></button>
+      <button class="side-nav-button" data-side-action="import" type="button" aria-label="Atualizar frota" title="Atualizar frota"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 15v5h16v-5"/></svg></button>
+    </nav>
     <header class="topbar">
       <a class="brand" href="/" aria-label="Painel da frota">
         <span class="brand-mark"><span></span><span></span><span></span></span>
-        <span class="brand-name">FROTA<span> .</span></span>
+        <span class="brand-copy"><span class="brand-name">Controle de frota</span><small>Veículos e próximas revisões</small></span>
       </a>
       <div class="topbar-center">
         <span class="live-dot"></span>
@@ -74,16 +82,6 @@
       </article>
     </section>
 
-    <section class="section-heading">
-      <div>
-        <p class="eyebrow"><span class="eyebrow-line"></span> VEÍCULO EM DESTAQUE</p>
-        <h2>Revisão à vista.</h2>
-      </div>
-      <span id="hero-status" class="status-pill status-pill--neutral"><span class="status-dot"></span>Aguardando dados</span>
-    </section>
-
-    <section id="selected-panel" class="feature-card" aria-live="polite"></section>
-
     <section class="fleet-section">
       <div class="fleet-heading">
         <div>
@@ -116,6 +114,17 @@
         <span class="empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M8 10.5h5"/></svg></span>
         <div><strong>Nenhum veículo encontrado</strong><p>Tente mudar o filtro ou a busca.</p></div>
       </div>
+    </section>
+
+    <section id="detail-view" class="detail-view" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> VEÍCULO SELECIONADO</p>
+          <h2>Detalhes da revisão</h2>
+        </div>
+        <div class="detail-actions"><span id="hero-status" class="status-pill status-pill--neutral"><span class="status-dot"></span>Aguardando dados</span><button id="back-to-fleet" class="back-button" type="button">Voltar aos veículos</button></div>
+      </div>
+      <section id="selected-panel" class="feature-card" aria-live="polite"></section>
     </section>
 
     <footer class="footer">
