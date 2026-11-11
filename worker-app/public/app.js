@@ -22,7 +22,7 @@
     description: ["descricao", "descricao do equipamento", "descricao ativo"],
     category: ["classe", "categoria", "tipo bem", "grupo bem", "tipo do bem", "classificacao"],
     driver: ["condutor", "motorista", "nome do condutor"],
-    current: ["cont atual", "contador atual", "leitura atual", "cont acumulado", "horimetro atual"],
+    current: ["cont acumulado", "cont atual", "contador atual", "leitura atual", "horimetro atual"],
     next: ["cont manutencao", "contador manutencao", "proxima manutencao", "proxima revisao"],
     remaining: ["cont restante", "contador restante", "restante", "faltam"],
     interval: ["incremento manut", "incremento manutencao", "intervalo manutencao", "periodicidade manutencao"],
@@ -111,24 +111,26 @@
     const model = String(pick(row, aliases.model) || pick(row, aliases.description) || "Modelo não informado").trim();
     const driver = String(pick(row, aliases.driver) || "").trim();
     const current = toNumber(pick(row, aliases.current));
-    const reportedNext = toNumber(pick(row, aliases.next));
+    const lastService = toNumber(pick(row, aliases.next));
     const reportedRemaining = toNumber(pick(row, aliases.remaining));
     const reportedInterval = toNumber(pick(row, aliases.interval));
     const type = typeFromRow(row);
     const unit = unitFromRow(row);
     const defaultInterval = type === "moto" ? 10000 : (type === "truck" || type === "bus" ? 30000 : null);
-    const interval = reportedInterval || (reportedNext != null && current != null && reportedNext > current ? reportedNext - current : null) || defaultInterval;
-    let remaining = reportedRemaining;
-    if (remaining == null && reportedNext != null && current != null) remaining = reportedNext - current;
+    const hasMaintenanceRecord = lastService != null && lastService > 0;
+    const interval = (!hasMaintenanceRecord && type === "moto" ? defaultInterval : reportedInterval) || defaultInterval;
+    const dueFromRecord = hasMaintenanceRecord && interval != null ? lastService + interval : null;
+    let remaining = hasMaintenanceRecord ? reportedRemaining : null;
+    if (remaining == null && dueFromRecord != null && current != null) remaining = dueFromRecord - current;
     if (remaining == null && current != null && interval != null && interval > 0) {
       const withinCycle = current % interval;
       remaining = withinCycle === 0 ? interval : interval - withinCycle;
     }
-    const nextService = reportedNext != null ? reportedNext : (current != null && remaining != null ? current + remaining : null);
+    const nextService = dueFromRecord != null ? dueFromRecord : (current != null && remaining != null ? current + remaining : null);
     const rawTolerance = toNumber(pick(row, aliases.tolerance));
-    const toleranceEstimated = rawTolerance == null;
-    const tolerance = rawTolerance == null ? (unit === "h" ? 100 : 1000) : rawTolerance;
-    const maintenance = String(pick(row, aliases.maintenance) || "").trim();
+    const toleranceEstimated = !hasMaintenanceRecord || rawTolerance == null;
+    const tolerance = toleranceEstimated ? (unit === "h" ? 100 : 1000) : rawTolerance;
+    const maintenance = hasMaintenanceRecord ? String(pick(row, aliases.maintenance) || "").trim() : "Revisão periódica estimada";
     const measuredAt = String(pick(row, aliases.date) || "").trim();
     const idValue = String(rawAsset || plate || model + "-" + index).trim();
     return {
@@ -145,14 +147,18 @@
       remaining: remaining,
       tolerance: tolerance,
       toleranceEstimated: toleranceEstimated,
+      planEstimated: !hasMaintenanceRecord,
+      _hasMaintenanceRecord: hasMaintenanceRecord,
       maintenance: maintenance,
       measuredAt: measuredAt
     };
   }
 
   function chooseMaintenanceRow(candidates) {
-    const readings = candidates.filter((item) => item.current != null || item.remaining != null || item.nextService != null);
-    const pool = readings.length ? readings : candidates;
+    const registered = candidates.filter((item) => item._hasMaintenanceRecord);
+    const candidatesWithPlan = registered.length ? registered : candidates;
+    const periodic = candidatesWithPlan.filter((item) => !(item.type === "moto" && /primeira revisao/.test(normalizeText(item.maintenance)) && item.current > item.interval * 2));
+    const pool = periodic.length ? periodic : candidatesWithPlan;
     return pool.slice().sort((a, b) => {
       const ar = a.remaining == null ? Number.POSITIVE_INFINITY : a.remaining;
       const br = b.remaining == null ? Number.POSITIVE_INFINITY : b.remaining;
@@ -174,7 +180,11 @@
       if (!grouped.has(key)) grouped.set(key, []);
       grouped.get(key).push(vehicle);
     });
-    return Array.from(grouped.values()).map(chooseMaintenanceRow);
+    return Array.from(grouped.values()).map((candidates) => {
+      const chosen = chooseMaintenanceRow(candidates);
+      delete chosen._hasMaintenanceRecord;
+      return chosen;
+    });
   }
 
   function getStatus(vehicle) {
@@ -276,7 +286,7 @@
     const pct = progress(vehicle);
     const currentLabel = vehicle.current == null ? "—" : formatNumber(vehicle.current);
     const nextLabel = vehicle.nextService == null ? "—" : formatNumber(vehicle.nextService);
-    const intervalLabel = vehicle.interval == null ? "Intervalo não cadastrado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit;
+    const intervalLabel = vehicle.interval == null ? "Intervalo não cadastrado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit + (vehicle.planEstimated ? " · estimativa" : "");
     const toleranceLabel = vehicle.tolerance == null ? "Não informada" : formatNumber(vehicle.tolerance) + " " + vehicle.unit;
     const statusClass = status.tone === "late" ? "status-pill--late" : (status.tone === "attention" ? "status-pill--attention" : (status.tone === "neutral" ? "status-pill--neutral" : ""));
     const maintenance = vehicle.maintenance || "Plano de manutenção";
@@ -326,7 +336,7 @@
       '<div class="card-metric"><div><small>CONTADOR ATUAL</small><strong>' + (vehicle.current == null ? "—" : formatNumber(vehicle.current)) + ' <span class="metric-unit">' + escapeHtml(vehicle.unit) + "</span></strong></div>" +
       '<div class="card-remain"><small>PRÓXIMA REVISÃO</small><strong class="' + remainderClass + '">' + escapeHtml(remainingText(vehicle)) + "</strong></div></div>" +
       '<div class="card-progress" role="img" aria-label="' + Math.round(pct) + "% do intervalo percorrido\">" + segments + "</div>" +
-      '<div class="card-bottom"><span>' + escapeHtml(vehicle.interval == null ? "Intervalo não informado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit) + '</span><span class="card-status ' + statusClass + '">' + escapeHtml(status.label) + "</span></div>" +
+      '<div class="card-bottom"><span>' + escapeHtml(vehicle.interval == null ? "Intervalo não informado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit + (vehicle.planEstimated ? " · estimativa" : "")) + '</span><span class="card-status ' + statusClass + '">' + escapeHtml(status.label) + "</span></div>" +
     "</article>";
   }
 
