@@ -179,8 +179,13 @@
 
   function getStatus(vehicle) {
     if (vehicle.remaining == null) return { label: "Sem leitura", tone: "neutral" };
-    if (vehicle.remaining < 0) return { label: "Revisão vencida", tone: "late" };
-    if (vehicle.tolerance != null && vehicle.remaining <= vehicle.tolerance) return { label: "Na tolerância", tone: "attention" };
+    if (vehicle.remaining < 0) {
+      if (vehicle.tolerance != null && Math.abs(vehicle.remaining) <= vehicle.tolerance) {
+        return { label: "Dentro da tolerância", tone: "attention" };
+      }
+      return { label: "Revisão vencida", tone: "late" };
+    }
+    if (vehicle.remaining === 0) return { label: "Revisão agora", tone: "attention" };
     if (vehicle.interval != null && vehicle.remaining <= vehicle.interval * 0.2) return { label: "Revisão próxima", tone: "attention" };
     return { label: "Em dia", tone: "good" };
   }
