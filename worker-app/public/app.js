@@ -22,6 +22,7 @@
     description: ["descricao", "descricao do equipamento", "descricao ativo"],
     category: ["classe", "categoria", "tipo bem", "grupo bem", "tipo do bem", "classificacao"],
     driver: ["condutor", "motorista", "nome do condutor"],
+    tripStatus: ["situacao viagem", "situacao da viagem", "status viagem", "status da viagem", "em viagem"],
     current: ["cont acumulado", "cont atual", "contador atual", "leitura atual", "horimetro atual"],
     next: ["cont manutencao", "contador manutencao", "proxima manutencao", "proxima revisao"],
     remaining: ["cont restante", "contador restante", "restante", "faltam"],
@@ -111,6 +112,7 @@
     const model = String(pick(row, aliases.model) || pick(row, aliases.description) || "Modelo não informado").trim();
     const driverValue = String(pick(row, aliases.driver) || "").trim();
     const driver = /^[-–—]$/.test(driverValue) ? "" : driverValue;
+    const tripStatus = String(pick(row, aliases.tripStatus) || "").trim();
     const current = toNumber(pick(row, aliases.current));
     const lastService = toNumber(pick(row, aliases.next));
     const reportedRemaining = toNumber(pick(row, aliases.remaining));
@@ -140,6 +142,7 @@
       plate: plate,
       model: model,
       driver: driver,
+      tripStatus: tripStatus,
       type: type,
       unit: unit,
       current: current,
@@ -246,6 +249,31 @@
     return "Faltam " + formatNumber(value) + " " + unit;
   }
 
+  function isOnTrip(vehicle) {
+    return /\b(em viagem|viajando|em rota|em transito|sim)\b/.test(normalizeText(vehicle.tripStatus));
+  }
+
+  function upcomingVehicles() {
+    return state.vehicles.filter((vehicle) => vehicle.remaining != null && vehicle.remaining >= 0)
+      .sort((a, b) => a.remaining - b.remaining)
+      .slice(0, 3);
+  }
+
+  function renderUpcoming() {
+    const vehicles = upcomingVehicles();
+    one("#upcoming-count").textContent = String(vehicles.length);
+    one("#upcoming-grid").innerHTML = vehicles.length ? vehicles.map((vehicle) => {
+      const status = getStatus(vehicle);
+      const category = vehicle.type === "moto" ? "Motocicleta" : (vehicle.type === "bus" ? "Ônibus" : "Caminhão");
+      return '<button class="upcoming-card" type="button" data-upcoming-id="' + escapeHtml(vehicle.id) + '" aria-label="Abrir ' + escapeHtml(vehicle.assetCode) + '">' +
+        '<span class="upcoming-icon">' + (vehicle.type === "moto" ? "◇" : (vehicle.type === "bus" ? "▣" : "▰")) + '</span>' +
+        '<span class="upcoming-card-copy"><strong>' + escapeHtml(vehicle.assetCode) + ' <span>— ' + escapeHtml(vehicle.model) + '</span></strong><small>' + escapeHtml(category) + ' · ' + escapeHtml(vehicle.plate || "Sem placa") + '</small><em class="upcoming-remaining ' + (status.tone === "attention" ? "is-near" : "") + '">' + escapeHtml(remainingText(vehicle)) + '</em></span>' +
+        '<span class="upcoming-arrow" aria-hidden="true">→</span>' +
+        '<span class="upcoming-readings">Atual ' + escapeHtml(formatNumber(vehicle.current)) + ' ' + escapeHtml(vehicle.unit) + ' <b>→</b> Próxima ' + escapeHtml(formatNumber(vehicle.nextService)) + ' ' + escapeHtml(vehicle.unit) + '</span>' +
+      '</button>';
+    }).join("") : '<p class="upcoming-empty">Nenhum veículo com revisão futura informado no relatório.</p>';
+  }
+
   function updateCounts() {
     const count = (type) => state.vehicles.filter((vehicle) => vehicle.type === type).length;
     const urgent = state.vehicles.filter((vehicle) => {
@@ -256,6 +284,15 @@
     one("#count-moto").textContent = formatNumber(count("moto"));
     one("#count-bus").textContent = formatNumber(count("bus"));
     one("#count-total").textContent = formatNumber(state.vehicles.length);
+    const hasTripData = state.vehicles.some((vehicle) => String(vehicle.tripStatus || "").trim());
+    const onTrip = state.vehicles.filter(isOnTrip).length;
+    one("#count-trip").textContent = hasTripData ? formatNumber(onTrip) : "—";
+    one("#trip-stat-note").textContent = hasTripData ? "veículos em rota no relatório" : "O relatório não informa viagens";
+    one("#filter-trip-count").textContent = hasTripData ? String(onTrip) : "—";
+    many('[data-filter="trip"], [data-side-filter="trip"]').forEach((button) => {
+      button.disabled = !hasTripData;
+      button.title = hasTripData ? "Mostrar veículos em viagem" : "O relatório atual não informa quais veículos estão em viagem";
+    });
     one("#fleet-count").textContent = String(state.vehicles.length);
     one("#filter-all-count").textContent = String(state.vehicles.length);
     one("#filter-truck-count").textContent = String(count("truck"));
@@ -349,7 +386,9 @@
 
   function visibleVehicles() {
     let vehicles = state.vehicles.slice();
-    if (state.filter === "urgent") {
+    if (state.filter === "trip") {
+      vehicles = vehicles.filter(isOnTrip);
+    } else if (state.filter === "urgent") {
       vehicles = vehicles.filter((item) => {
         const tone = getStatus(item).tone;
         return tone === "attention" || tone === "late";
@@ -406,6 +445,7 @@
 
   function render() {
     updateCounts();
+    renderUpcoming();
     renderFeature();
     renderGrid();
     renderTimestamp();
@@ -563,7 +603,10 @@
     filter.click();
     one(".fleet-section").scrollIntoView({ behavior: "smooth", block: "start" });
   }));
-  one('.side-nav-button[data-side-action="import"]').addEventListener("click", openImport);
+  one("#show-urgent").addEventListener("click", () => {
+    one('.filter-chip[data-filter="urgent"]').click();
+    one(".fleet-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   one("#back-to-fleet").addEventListener("click", () => {
     one("#detail-view").hidden = true;
     one(".app-shell").classList.remove("is-detail");
@@ -577,6 +620,10 @@
     one(".app-shell").classList.add("is-detail");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  one("#upcoming-grid").addEventListener("click", (event) => {
+    const card = event.target.closest("[data-upcoming-id]");
+    if (card) selectVehicle(card.dataset.upcomingId);
+  });
   one("#vehicle-grid").addEventListener("click", (event) => {
     const card = event.target.closest("[data-vehicle-id]");
     if (!card) return;
