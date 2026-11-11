@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f3ece2">
+  <meta name="theme-color" content="#f7f8f6">
   <meta name="description" content="Painel de acompanhamento da frota e das próximas revisões.">
   <title>Monitoramento da frota</title>
   <link rel="icon" href="/assets/brand.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/theme-air.css">
   <script defer src="/xlsx.full.min.js"></script>
   <script defer src="/app.js"></script>
 </head>
@@ -26,8 +27,15 @@
     <header class="topbar">
       <a class="brand" href="/" aria-label="Painel da frota">
         <span class="brand-mark"><span></span><span></span><span></span></span>
-        <span class="brand-copy"><span class="brand-name">Controle de frota</span><small>Veículos e próximas revisões</small></span>
+        <span class="brand-copy"><span class="brand-name">Frota<span class="brand-period">.</span></span><small>OPERAÇÕES</small></span>
       </a>
+      <nav class="top-navigation" aria-label="Navegação principal">
+        <button class="top-nav-button is-active" data-top-filter="all" type="button">Visão geral <span aria-hidden="true">⌄</span></button>
+        <button class="top-nav-button" data-top-filter="truck" type="button">Caminhões <span aria-hidden="true">⌄</span></button>
+        <button class="top-nav-button" data-top-filter="moto" type="button">Motocicletas <span aria-hidden="true">⌄</span></button>
+        <button class="top-nav-button" data-top-filter="bus" type="button">Ônibus <span aria-hidden="true">⌄</span></button>
+        <button class="top-nav-button" data-top-filter="urgent" type="button">Revisões <span aria-hidden="true">⌄</span></button>
+      </nav>
       <div class="topbar-center">
         <span class="live-dot"></span>
         <span>Monitoramento operacional</span>
@@ -43,9 +51,9 @@
 
     <section class="intro-row">
       <div>
-        <p class="eyebrow"><span class="eyebrow-line"></span> PAINEL DE MANUTENÇÃO</p>
-        <h1>Uma frota em dia.<br><span>Uma operação tranquila.</span></h1>
-        <p class="intro-copy">Acompanhe veículos, contadores e revisões programadas em um só lugar.</p>
+        <p class="eyebrow"><span class="eyebrow-line"></span> INÍCIO / FROTA / MONITORAMENTO</p>
+        <h1>Monitoramento da frota<span>.</span></h1>
+        <p class="intro-copy">Veículos, motoristas e próximas revisões em uma visão compartilhada.</p>
       </div>
       <div class="intro-note">
         <span class="note-icon">
