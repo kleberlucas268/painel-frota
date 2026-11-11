@@ -81,8 +81,8 @@
   function typeFromRow(row) {
     const explicit = normalizeText(pick(row, aliases.category));
     const model = normalizeText(pick(row, aliases.model));
-    const all = normalizeText(Object.values(row || {}).join(" "));
-    const source = explicit + " " + model + " " + all;
+    const description = normalizeText(pick(row, aliases.description));
+    const source = explicit + " " + model + " " + description;
     if (/moto|motocic|bros|cg 160|nxr|fan 160|biz 125|pop 110|xtz|yamaha factor/.test(source)) return "moto";
     if (/onibus|bus urbano|volvo b[0-9]|marcopolo|caio apache/.test(source)) return "bus";
     if (/caminhao|truck|cavalo mecanico|volvo fh|volvo fm|scania|daf xf|mercedes actros|cargo 24|iveco stralis/.test(source)) return "truck";
