@@ -221,9 +221,9 @@
   }
 
   function vehicleImage(type) {
-    if (type === "moto") return "/assets/moto.svg";
-    if (type === "bus") return "/assets/bus.svg";
-    return "/assets/truck.svg";
+    if (type === "moto") return "/assets/bros-160.png";
+    if (type === "bus") return "/assets/bus.png";
+    return "/assets/truck.png";
   }
 
   function imageClass(type) {
@@ -233,7 +233,7 @@
   function plateMarkup(plate, mini) {
     const number = plate || "SEM PLACA";
     return '<span class="' + (mini ? "mini-plate" : "mercosul-plate") + '" aria-label="Placa ' + escapeHtml(number) + '">' +
-      '<span class="plate-band"><span>BRASIL</span><span>▰</span></span>' +
+      '<span class="plate-band"><span>BRASIL</span><span class="plate-flag" aria-hidden="true"></span></span>' +
       '<span class="plate-number">' + escapeHtml(number) + "</span></span>";
   }
 
@@ -328,16 +328,22 @@
     const statusClass = status.tone === "late" ? "card-status--late" : (status.tone === "attention" ? "card-status--attention" : (status.tone === "neutral" ? "card-status--neutral" : ""));
     const selectedClass = vehicle.id === state.selectedId ? " is-selected" : "";
     const imageClassName = vehicle.type === "moto" ? "card-vehicle-art--moto" : (vehicle.type === "bus" ? "card-vehicle-art--bus" : "");
-    const remainderClass = status.tone === "late" ? "is-late" : "";
     const segments = progressSegments(pct, vehicle.tolerance, vehicle.interval);
     const code = vehicle.assetCode || "Bem sem código";
+    const driver = vehicle.driver || "Condutor não informado";
+    const unit = vehicle.unit || "km";
+    const current = vehicle.current == null ? "—" : formatNumber(vehicle.current) + " " + unit;
+    const next = vehicle.nextService == null ? "—" : formatNumber(vehicle.nextService) + " " + unit;
+    const tolerance = vehicle.tolerance == null ? "Não informada" : "+" + formatNumber(vehicle.tolerance) + " " + unit;
+    const interval = vehicle.interval == null ? "Intervalo não informado" : "A cada " + formatNumber(vehicle.interval) + " " + unit + (vehicle.planEstimated ? " · estimativa" : "");
     return '<article class="vehicle-card' + selectedClass + '" data-vehicle-id="' + escapeHtml(vehicle.id) + '" tabindex="0" role="button" aria-label="Selecionar ' + escapeHtml(vehicle.model) + ", placa " + escapeHtml(vehicle.plate || "não informada") + '">' +
-      '<div class="vehicle-card-top"><div><span class="card-asset-code">' + escapeHtml(code) + '</span><strong class="card-model">' + escapeHtml(vehicle.model) + "</strong></div>" + plateMarkup(vehicle.plate, true) + "</div>" +
-      '<img class="card-vehicle-art ' + imageClassName + '" src="' + vehicleImage(vehicle.type) + '" alt="" aria-hidden="true">' +
-      '<div class="card-metric"><div><small>CONTADOR ATUAL</small><strong>' + (vehicle.current == null ? "—" : formatNumber(vehicle.current)) + ' <span class="metric-unit">' + escapeHtml(vehicle.unit) + "</span></strong></div>" +
-      '<div class="card-remain"><small>PRÓXIMA REVISÃO</small><strong class="' + remainderClass + '">' + escapeHtml(remainingText(vehicle)) + "</strong></div></div>" +
-      '<div class="card-progress" role="img" aria-label="' + Math.round(pct) + "% do intervalo percorrido\">" + segments + "</div>" +
-      '<div class="card-bottom"><span>' + escapeHtml(vehicle.interval == null ? "Intervalo não informado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit + (vehicle.planEstimated ? " · estimativa" : "")) + '</span><span class="card-status ' + statusClass + '">' + escapeHtml(status.label) + "</span></div>" +
+      '<div class="vehicle-card-top"><strong class="card-title"><span class="card-asset-code">' + escapeHtml(code) + '</span><span class="card-model"> — ' + escapeHtml(vehicle.model) + '</span></strong><span class="card-status ' + statusClass + '">' + escapeHtml(status.label) + '</span></div>' +
+      '<span class="card-driver" title="' + escapeHtml(driver) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19c.8-3.2 3.1-4.8 6.5-4.8s5.7 1.6 6.5 4.8"/></svg><span class="card-driver-name">' + escapeHtml(driver) + '</span></span>' +
+      '<div class="card-visual"><img class="card-vehicle-art ' + imageClassName + '" src="' + vehicleImage(vehicle.type) + '" alt="" aria-hidden="true">' + plateMarkup(vehicle.plate, true) + '</div>' +
+      '<div class="card-reading"><strong>' + escapeHtml(current) + '</strong><span>Próxima <b>' + escapeHtml(next) + '</b></span></div>' +
+      '<div class="card-progress-row"><div class="card-progress" role="img" aria-label="' + Math.round(pct) + '% do intervalo percorrido">' + segments + '</div><strong class="card-percent">' + Math.round(pct) + '%</strong></div>' +
+      '<div class="card-service"><strong class="card-remaining">' + escapeHtml(remainingText(vehicle)) + '</strong><span class="card-tolerance">Tolerância ' + escapeHtml(tolerance) + '</span></div>' +
+      '<div class="card-bottom"><span>' + escapeHtml(interval) + '</span><span>Detalhes <b aria-hidden="true">→</b></span></div>' +
     "</article>";
   }
 
@@ -540,23 +546,41 @@
   many(".filter-chip").forEach((button) => button.addEventListener("click", () => {
     state.filter = button.dataset.filter;
     many(".filter-chip").forEach((item) => item.classList.toggle("is-active", item === button));
+    many(".side-nav-button[data-side-filter]").forEach((item) => item.classList.toggle("is-active", item.dataset.sideFilter === state.filter));
     renderGrid();
   }));
+  many(".side-nav-button[data-side-filter]").forEach((button) => button.addEventListener("click", () => {
+    const filter = one('.filter-chip[data-filter="' + button.dataset.sideFilter + '"]');
+    one("#detail-view").hidden = true;
+    one(".app-shell").classList.remove("is-detail");
+    filter.click();
+    one(".fleet-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  one('.side-nav-button[data-side-action="import"]').addEventListener("click", openImport);
+  one("#back-to-fleet").addEventListener("click", () => {
+    one("#detail-view").hidden = true;
+    one(".app-shell").classList.remove("is-detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  function selectVehicle(id) {
+    state.selectedId = id;
+    renderFeature();
+    renderGrid();
+    one("#detail-view").hidden = false;
+    one(".app-shell").classList.add("is-detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   one("#vehicle-grid").addEventListener("click", (event) => {
     const card = event.target.closest("[data-vehicle-id]");
     if (!card) return;
-    state.selectedId = card.dataset.vehicleId;
-    renderFeature();
-    renderGrid();
+    selectVehicle(card.dataset.vehicleId);
   });
   one("#vehicle-grid").addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     const card = event.target.closest("[data-vehicle-id]");
     if (!card) return;
     event.preventDefault();
-    state.selectedId = card.dataset.vehicleId;
-    renderFeature();
-    renderGrid();
+    selectVehicle(card.dataset.vehicleId);
   });
   one("#selected-panel").addEventListener("click", (event) => {
     if (event.target.closest("[data-open-import]")) openImport();
