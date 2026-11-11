@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" fill="none">
+  <defs>
+    <linearGradient id="trailer" x1="112" y1="113" x2="493" y2="322" gradientUnits="userSpaceOnUse"><stop stop-color="#fffefa"/><stop offset=".52" stop-color="#e9e6de"/><stop offset="1" stop-color="#d3d1c9"/></linearGradient>
+    <linearGradient id="cab" x1="536" y1="110" x2="759" y2="335" gradientUnits="userSpaceOnUse"><stop stop-color="#fffefa"/><stop offset=".48" stop-color="#eeeae1"/><stop offset="1" stop-color="#cbc9c1"/></linearGradient>
+    <linearGradient id="glass" x1="623" y1="125" x2="698" y2="221" gradientUnits="userSpaceOnUse"><stop stop-color="#899498"/><stop offset=".45" stop-color="#535f64"/><stop offset="1" stop-color="#30393e"/></linearGradient>
+    <linearGradient id="wheel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#303536"/><stop offset=".55" stop-color="#151918"/><stop offset="1" stop-color="#444847"/></linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e2e3df"/><stop offset=".5" stop-color="#8e9695"/><stop offset="1" stop-color="#d4d7d3"/></linearGradient>
+    <linearGradient id="bumper" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#bfc1bc"/><stop offset=".48" stop-color="#f3f1eb"/><stop offset="1" stop-color="#9da19e"/></linearGradient>
+    <filter id="shadow" x="55" y="332" width="805" height="74" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="15"/></filter>
+  </defs>
+  <ellipse cx="467" cy="369" rx="355" ry="20" fill="#665C51" opacity=".18" filter="url(#shadow)"/>
+  <path d="M99 137c0-13 11-24 24-24h361c11 0 20 9 20 20v185H99V137Z" fill="url(#trailer)" stroke="#CBC8C0" stroke-width="2"/>
+  <path d="M119 134h342M119 148h342M119 300h342" stroke="#fff" stroke-opacity=".78" stroke-width="2"/>
+  <path d="M132 153v134m16-134v134m16-134v134m266-134v134" stroke="#D3D0C8" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M124 314h373" stroke="#C6C2B9" stroke-width="8" stroke-linecap="round"/>
+  <path d="M134 317h351" stroke="#F16C3F" stroke-opacity=".7" stroke-width="3"/>
+  <path d="M482 184h51v136h-51z" fill="#D8D5CC"/>
+  <path d="M511 151c0-14 11-25 25-25h130c17 0 31 9 39 24l42 79 10 84c1 8-5 15-13 15H518V151Z" fill="url(#cab)" stroke="#C5C1B8" stroke-width="2"/>
+  <path d="M553 141c2-5 7-8 13-8h80c14 0 26 7 32 19l29 52H548l5-63Z" fill="url(#glass)" stroke="#C9C7C1" stroke-width="4"/>
+  <path d="m565 143-3 56h44v-66h-32c-4 0-8 4-9 10Z" fill="#D8E0E0" fill-opacity=".52"/>
+  <path d="M617 132v67h81l-29-51c-5-10-16-16-27-16h-25Z" fill="#58656A" fill-opacity=".5"/>
+  <path d="M702 211h37l26 49-3 49c0 7-6 12-13 12h-46l-1-110Z" fill="#DFDDD5"/>
+  <path d="M712 218h31l13 25h-44v-25Z" fill="#F8F7F1"/>
+  <path d="M726 265h22v16h-22z" fill="#F3C276"/>
+  <path d="M697 224h24v40h-24z" fill="#C7C7BF"/>
+  <path d="M518 274h184v42H518z" fill="#e7e4dc"/>
+  <path d="M544 217h77v6h-77zm0 10h77v2h-77z" fill="#fff" fill-opacity=".45"/>
+  <path d="M535 308h217l-4 17c-1 6-6 10-12 10H535v-27Z" fill="url(#bumper)" stroke="#B5B6B1" stroke-width="1.5"/>
+  <path d="M515 281h11v40h-11zm173 0h10v35h-10z" fill="#b8bab5"/>
+  <path d="M751 314h15v9h-15z" fill="#F16C3F"/>
+  <path d="M745 211h10l16 35h-10l-16-35Z" fill="#F8F6EF"/>
+  <path d="M603 230h39v44h-39z" rx="4" fill="#E7E3DA" stroke="#C8C4BA"/>
+  <path d="M610 236h25v4h-25z" fill="#B4B2AA"/>
+  <path d="M611 246h22v2h-22zm0 6h22v2h-22zm0 6h22v2h-22z" fill="#AAA9A2"/>
+  <path d="M685 292h41" stroke="#B2B2AA" stroke-width="2" stroke-linecap="round"/>
+  <g>
+    <circle cx="210" cy="322" r="37" fill="url(#wheel)"/><circle cx="210" cy="322" r="22" fill="url(#rim)"/><circle cx="210" cy="322" r="13" fill="#737B79"/><circle cx="210" cy="322" r="5" fill="#414746"/>
+    <circle cx="396" cy="322" r="37" fill="url(#wheel)"/><circle cx="396" cy="322" r="22" fill="url(#rim)"/><circle cx="396" cy="322" r="13" fill="#737B79"/><circle cx="396" cy="322" r="5" fill="#414746"/>
+    <circle cx="568" cy="333" r="39" fill="url(#wheel)"/><circle cx="568" cy="333" r="23" fill="url(#rim)"/><circle cx="568" cy="333" r="13" fill="#707877"/><circle cx="568" cy="333" r="5" fill="#424847"/>
+    <circle cx="711" cy="333" r="39" fill="url(#wheel)"/><circle cx="711" cy="333" r="23" fill="url(#rim)"/><circle cx="711" cy="333" r="13" fill="#707877"/><circle cx="711" cy="333" r="5" fill="#424847"/>
+  </g>
+  <path d="M177 322h66m120 0h66m-24 0h16m-14 0h16m123 11h83m61 0h83" stroke="#F7F6F0" stroke-opacity=".43" stroke-width="2"/>
+  <path d="M534 319h63" stroke="#888B86" stroke-width="2"/>
+  <path d="M96 319h26m356 0h24" stroke="#999B95" stroke-width="5" stroke-linecap="round"/>
+</svg>
