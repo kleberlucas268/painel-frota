@@ -1,42 +1,31 @@
 # Painel de monitoramento da frota
 
-Aplicação estática servida por um Cloudflare Worker, com dados compartilhados em Cloudflare D1. Qualquer pessoa com o link pode consultar a frota. A importação do relatório exige o segredo \`IMPORT_TOKEN\`.
+Aplicação publicada em [Cloudflare Workers](https://painel-monitoramento-frota.kleberlucas268.workers.dev/), com dados compartilhados no D1. Qualquer pessoa com o link pode consultar a frota. Atualizar os dados exige o segredo `IMPORT_TOKEN`, configurado como Secret no ambiente Production.
 
-## Projeto
+## Estrutura
 
-- \`public/\`: interface responsiva e ilustrações vetoriais.
-- \`src/worker.js\`: API pública de leitura e API protegida de importação.
-- \`migrations/\`: estrutura do D1.
-- \`wrangler.jsonc\`: configuração do Worker, arquivos estáticos e banco.
+- `public/`: interface responsiva, ilustrações e biblioteca SheetJS 0.20.3 para ler Excel no navegador. A licença da biblioteca está em `public/SheetJS-LICENSE.txt`.
+- `src/worker.js`: API pública de leitura e API protegida de importação.
+- `migrations/`: estrutura da tabela D1.
+- `wrangler.jsonc`: configuração do Worker, arquivos estáticos e banco D1.
 
-O Excel é processado no navegador que faz a atualização. O app publica somente código do bem, placa, modelo, motorista, contador, revisão e manutenção. A coluna de endereço não é lida para o banco e o arquivo Excel não é enviado ao GitHub.
+O navegador lê o Excel e envia ao Worker somente os campos necessários aos cartões: código do bem, placa, modelo, motorista, contadores, revisão, intervalo e manutenção. A coluna de endereço não é armazenada. O arquivo Excel não é enviado ao GitHub.
 
-## Preparar o Cloudflare
+## Atualizar a frota
 
-No terminal, dentro de \`worker-app/\`:
+1. Exporte o relatório do Qlik em `.xlsx`, `.xls` ou `.xlsm`.
+2. Abra o [painel](https://painel-monitoramento-frota.kleberlucas268.workers.dev/) e clique em **Atualizar frota**.
+3. Selecione o arquivo, informe a chave de atualização e clique em **Publicar atualização**.
 
-1. Instale as dependências: \`npm install\`.
-2. Crie o banco D1: \`npm run db:create\`. Copie o ID retornado.
-3. Substitua \`PREENCHER_COM_ID_DO_D1\` em \`wrangler.jsonc\` pelo ID do banco.
-4. Aplique a tabela: \`npm run db:migrate:remote\`.
-5. Crie o segredo de importação: \`npx wrangler secret put IMPORT_TOKEN\`. Digite uma senha longa e guarde-a.
-6. Publique: \`npm run deploy\`.
+As linhas são agrupadas pelo campo `Bem`, resultando em um cartão por veículo. O contador atual vem de `Cont. Acumulado`. Quando há registro de revisão, a próxima é `Cont. Manutenção` + `Incremento Manut.`; `Cont. Restante` indica a distância até ela. A manutenção pertinente ao ciclo atual é escolhida entre as linhas do veículo, evitando tratar a primeira revisão antiga como próxima revisão.
 
-A rota \`GET /api/fleet\` não exige login. A rota \`POST /api/import\` exige \`Authorization: Bearer <IMPORT_TOKEN>\`. O token não fica salvo no navegador; informe-o somente ao atualizar a planilha.
+O intervalo do relatório prevalece sobre os exemplos de referência. Sem registro de última revisão, o painel estima o próximo ciclo e mostra `estimativa`: 10.000 km para motocicletas e 30.000 km para caminhões e ônibus quando não houver outro intervalo no relatório. A tolerância exibida também é estimada quando ausente: 1.000 km ou 100 horas. Veículos medidos por horas usam `h` no lugar de `km`.
 
-## Importar o relatório do Qlik
+## Implantação
 
-Abra a URL do Worker, selecione **Atualizar frota**, escolha o Excel exportado e informe o token de importação. As linhas são agrupadas pelo campo \`Bem\`; para cada veículo, o painel apresenta a manutenção com o menor contador restante disponível. Os intervalos padrão de referência são 10.000 km para motocicletas e 30.000 km para caminhões e ônibus quando o relatório não trouxer um intervalo.
+O repositório [kleberlucas268/painel-frota](https://github.com/kleberlucas268/painel-frota) está conectado ao Workers Builds na branch `main`. O diretório raiz do build é `/worker-app`; os comandos configurados são `npm install` e `npx wrangler deploy`. Mudanças nessa pasta disparam uma nova implantação. O `wrangler.jsonc` já contém o ID do banco D1 `painel-monitoramento-frota`.
 
-## Conectar o GitHub ao Workers Builds
+Para rodar localmente, execute `npm install` e `npm run dev` dentro de `worker-app/`. A migração do D1 está em `migrations/0001_create_fleet_snapshot.sql`. O segredo `IMPORT_TOKEN` fica apenas no Cloudflare, nunca no repositório.
 
-O repositório atual já contém um painel antigo na raiz. Este app fica isolado em \`worker-app/\`. Em **Workers & Pages → Create → Workers Builds**, conecte o repositório \`kleberlucas268/painel-frota\` e selecione a branch que contém esta pasta. Configure o diretório raiz como \`worker-app\`, o comando de implantação como \`npm run deploy\` e deixe o diretório de saída vazio. As alterações nessa branch passam a disparar os builds do Worker.
+`GET /api/fleet` é público. `POST /api/import` exige `Authorization: Bearer <IMPORT_TOKEN>` e substitui o retrato compartilhado da frota. A chave não fica salva no navegador após a importação.
 
-Se preferir manter a raiz antiga intacta, use a branch do app até revisar o pull request. O banco D1 e o segredo são configurados no Cloudflare; não os coloque no GitHub.
-
-## Observações
-
-- Os contadores e cartões são calculados a partir do Excel importado.
-- O arquivo do relatório não deve ser colocado no repositório.
-- Se uma coluna estiver vazia, o painel apresenta o dado como não informado.
-- A tolerância padrão exibida quando o relatório não informa uma é de referência: 1.000 km ou 100 horas.
