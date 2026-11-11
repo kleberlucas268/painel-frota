@@ -313,14 +313,14 @@
     const selectedClass = vehicle.id === state.selectedId ? " is-selected" : "";
     const imageClassName = vehicle.type === "moto" ? "card-vehicle-art--moto" : (vehicle.type === "bus" ? "card-vehicle-art--bus" : "");
     const remainderClass = status.tone === "late" ? "is-late" : "";
-    const progress = progressSegments(pct, vehicle.tolerance, vehicle.interval);
+    const segments = progressSegments(pct, vehicle.tolerance, vehicle.interval);
     const code = vehicle.assetCode || "Bem sem código";
     return '<article class="vehicle-card' + selectedClass + '" data-vehicle-id="' + escapeHtml(vehicle.id) + '" tabindex="0" role="button" aria-label="Selecionar ' + escapeHtml(vehicle.model) + ", placa " + escapeHtml(vehicle.plate || "não informada") + '">' +
       '<div class="vehicle-card-top"><div><span class="card-asset-code">' + escapeHtml(code) + '</span><strong class="card-model">' + escapeHtml(vehicle.model) + "</strong></div>" + plateMarkup(vehicle.plate, true) + "</div>" +
       '<img class="card-vehicle-art ' + imageClassName + '" src="' + vehicleImage(vehicle.type) + '" alt="" aria-hidden="true">' +
       '<div class="card-metric"><div><small>CONTADOR ATUAL</small><strong>' + (vehicle.current == null ? "—" : formatNumber(vehicle.current)) + ' <span class="metric-unit">' + escapeHtml(vehicle.unit) + "</span></strong></div>" +
       '<div class="card-remain"><small>PRÓXIMA REVISÃO</small><strong class="' + remainderClass + '">' + escapeHtml(remainingText(vehicle)) + "</strong></div></div>" +
-      '<div class="card-progress" role="img" aria-label="' + Math.round(pct) + "% do intervalo percorrido\">" + progress + "</div>" +
+      '<div class="card-progress" role="img" aria-label="' + Math.round(pct) + "% do intervalo percorrido\">" + segments + "</div>" +
       '<div class="card-bottom"><span>' + escapeHtml(vehicle.interval == null ? "Intervalo não informado" : "A cada " + formatNumber(vehicle.interval) + " " + vehicle.unit) + '</span><span class="card-status ' + statusClass + '">' + escapeHtml(status.label) + "</span></div>" +
     "</article>";
   }
