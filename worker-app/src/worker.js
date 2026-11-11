@@ -39,6 +39,7 @@ function sanitizeVehicle(input) {
     remaining: finiteOrNull(source.remaining),
     tolerance: finiteOrNull(source.tolerance),
     toleranceEstimated: Boolean(source.toleranceEstimated),
+    planEstimated: Boolean(source.planEstimated),
     maintenance: boundedString(source.maintenance, 160),
     measuredAt: boundedString(source.measuredAt, 60)
   };
@@ -120,3 +121,4 @@ export default {
     return new Response("Frontend assets binding is missing.", { status: 500 });
   }
 };
+
