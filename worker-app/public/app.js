@@ -342,7 +342,7 @@
       '<div class="card-visual"><img class="card-vehicle-art ' + imageClassName + '" src="' + vehicleImage(vehicle.type) + '" alt="" aria-hidden="true">' + plateMarkup(vehicle.plate, true) + '</div>' +
       '<div class="card-reading"><strong>' + escapeHtml(current) + '</strong><span>Próxima <b>' + escapeHtml(next) + '</b></span></div>' +
       '<div class="card-progress-row"><div class="card-progress" role="img" aria-label="' + Math.round(pct) + '% do intervalo percorrido">' + segments + '</div><strong class="card-percent">' + Math.round(pct) + '%</strong></div>' +
-      '<div class="card-service"><strong class="card-remaining">' + escapeHtml(remainingText(vehicle)) + '</strong><span class="card-tolerance">Tolerância ' + escapeHtml(tolerance) + '</span></div>' +
+      '<div class="card-service"><strong class="card-remaining card-remaining--' + escapeHtml(status.tone) + '">' + escapeHtml(remainingText(vehicle)) + '</strong><span class="card-tolerance">Tolerância ' + escapeHtml(tolerance) + '</span></div>' +
       '<div class="card-bottom"><span>' + escapeHtml(interval) + '</span><span>Detalhes <b aria-hidden="true">→</b></span></div>' +
     "</article>";
   }
@@ -547,7 +547,14 @@
     state.filter = button.dataset.filter;
     many(".filter-chip").forEach((item) => item.classList.toggle("is-active", item === button));
     many(".side-nav-button[data-side-filter]").forEach((item) => item.classList.toggle("is-active", item.dataset.sideFilter === state.filter));
+    many(".top-nav-button").forEach((item) => item.classList.toggle("is-active", item.dataset.topFilter === state.filter));
     renderGrid();
+  }));
+  many(".top-nav-button").forEach((button) => button.addEventListener("click", () => {
+    one("#detail-view").hidden = true;
+    one(".app-shell").classList.remove("is-detail");
+    one('.filter-chip[data-filter="' + button.dataset.topFilter + '"]').click();
+    one(".fleet-section").scrollIntoView({ behavior: "smooth", block: "start" });
   }));
   many(".side-nav-button[data-side-filter]").forEach((button) => button.addEventListener("click", () => {
     const filter = one('.filter-chip[data-filter="' + button.dataset.sideFilter + '"]');
