@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3ece2">
+  <meta name="description" content="Painel de acompanhamento da frota e das próximas revisões.">
+  <title>Monitoramento da frota</title>
+  <link rel="icon" href="/assets/brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="page-glow page-glow--one"></div>
+  <div class="page-glow page-glow--two"></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Painel da frota">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span class="brand-name">FROTA<span> .</span></span>
+      </a>
+      <div class="topbar-center">
+        <span class="live-dot"></span>
+        <span>Monitoramento operacional</span>
+      </div>
+      <div class="topbar-actions">
+        <span id="updated-label" class="updated-label">Aguardando relatório</span>
+        <button id="open-import" class="button button--dark" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"/></svg>
+          Atualizar frota
+        </button>
+      </div>
+    </header>
+
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow"><span class="eyebrow-line"></span> PAINEL DE MANUTENÇÃO</p>
+        <h1>Uma frota em dia.<br><span>Uma operação tranquila.</span></h1>
+        <p class="intro-copy">Acompanhe veículos, contadores e revisões programadas em um só lugar.</p>
+      </div>
+      <div class="intro-note">
+        <span class="note-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.3c0 4.6-2.9 7.5-7 9.2-4.1-1.7-7-4.6-7-9.2V6l7-2.5Z"/><path d="m8.8 12 2.1 2.1 4.4-4.5"/></svg>
+        </span>
+        <span><strong>Visão compartilhada</strong><small>Os dados são atualizados pelo relatório da frota.</small></span>
+      </div>
+    </section>
+
+    <section class="stats-grid" aria-label="Resumo da frota">
+      <article class="stat-card stat-card--lead">
+        <div class="stat-top"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h11v10H3zM14 10h3.5l3.5 3.3v4.2h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="stat-label">Caminhões</span></div>
+        <strong id="count-truck" class="stat-value">—</strong>
+        <span class="stat-foot">veículos monitorados</span>
+        <span class="stat-orbit stat-orbit--truck"></span>
+      </article>
+      <article class="stat-card stat-card--bike">
+        <div class="stat-top"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="16.5" r="3.2"/><circle cx="18" cy="16.5" r="3.2"/><path d="m6 16.5 3.4-5h4.2l2.4 5m-6.6-5 2.8 5H18l-3.8-7h-2.4M14 8.5h2"/></svg></span><span class="stat-label">Motocicletas</span></div>
+        <strong id="count-moto" class="stat-value">—</strong>
+        <span class="stat-foot">veículos monitorados</span>
+        <span class="stat-orbit stat-orbit--bike"></span>
+      </article>
+      <article class="stat-card stat-card--bus">
+        <div class="stat-top"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM7 8.5h10M7 12h3m3 0h4"/><circle cx="8" cy="18.5" r="1.5"/><circle cx="17" cy="18.5" r="1.5"/></svg></span><span class="stat-label">Ônibus</span></div>
+        <strong id="count-bus" class="stat-value">—</strong>
+        <span class="stat-foot">veículos monitorados</span>
+        <span class="stat-orbit stat-orbit--bus"></span>
+      </article>
+      <article class="stat-card stat-card--total">
+        <div class="stat-top"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V8l4-3h8l4 3v10M4 12h16M8 18v-3h8v3"/><circle cx="7.5" cy="18" r="1.4"/><circle cx="16.5" cy="18" r="1.4"/></svg></span><span class="stat-label">Total da frota</span></div>
+        <strong id="count-total" class="stat-value">—</strong>
+        <span class="stat-foot">ativos no relatório</span>
+        <span class="stat-orbit stat-orbit--total"></span>
+      </article>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow"><span class="eyebrow-line"></span> VEÍCULO EM DESTAQUE</p>
+        <h2>Revisão à vista.</h2>
+      </div>
+      <span id="hero-status" class="status-pill status-pill--neutral"><span class="status-dot"></span>Aguardando dados</span>
+    </section>
+
+    <section id="selected-panel" class="feature-card" aria-live="polite"></section>
+
+    <section class="fleet-section">
+      <div class="fleet-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> SUA OPERAÇÃO</p>
+          <h2>Todos os veículos <span id="fleet-count" class="count-badge">0</span></h2>
+        </div>
+        <div class="fleet-tools">
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m16 16 4.5 4.5"/></svg>
+            <input id="search-input" type="search" placeholder="Buscar placa, modelo ou VEC..." autocomplete="off">
+            <kbd>/</kbd>
+          </label>
+          <button id="sort-button" class="sort-button" type="button" aria-label="Ordenar por revisão mais próxima">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10m-7 6h4"/></svg><span>Mais próximos</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-row" role="group" aria-label="Filtrar categoria">
+        <button class="filter-chip is-active" data-filter="all" type="button">Todos <span id="filter-all-count">0</span></button>
+        <button class="filter-chip" data-filter="truck" type="button"><span class="filter-symbol">▰</span> Caminhões <span id="filter-truck-count">0</span></button>
+        <button class="filter-chip" data-filter="moto" type="button"><span class="filter-symbol">⌁</span> Motocicletas <span id="filter-moto-count">0</span></button>
+        <button class="filter-chip" data-filter="bus" type="button"><span class="filter-symbol">▤</span> Ônibus <span id="filter-bus-count">0</span></button>
+        <span class="filter-divider"></span>
+        <button class="filter-chip filter-chip--urgent" data-filter="urgent" type="button"><span class="urgent-mark"></span> Revisão próxima <span id="filter-urgent-count">0</span></button>
+      </div>
+
+      <div id="vehicle-grid" class="vehicle-grid"></div>
+      <div id="empty-results" class="empty-results" hidden>
+        <span class="empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M8 10.5h5"/></svg></span>
+        <div><strong>Nenhum veículo encontrado</strong><p>Tente mudar o filtro ou a busca.</p></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>FROTA<span class="footer-dot">.</span> Painel de monitoramento</span>
+      <span id="footer-updated">Dados compartilhados pela última importação.</span>
+    </footer>
+  </main>
+
+  <dialog id="import-dialog" class="import-dialog">
+    <form id="import-form" method="dialog" class="import-form">
+      <button id="close-import" class="dialog-close" type="button" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="dialog-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"/></svg></div>
+      <p class="eyebrow"><span class="eyebrow-line"></span> ATUALIZAÇÃO DE DADOS</p>
+      <h2>Importar relatório</h2>
+      <p class="dialog-copy">Selecione o Excel exportado do Qlik. O painel agrupa as linhas pelo código do bem e atualiza a frota para todos.</p>
+      <label class="file-picker">
+        <input id="report-file" type="file" accept=".xlsx,.xls,.xlsm">
+        <span class="file-picker-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"/></svg></span>
+        <span class="file-picker-text"><strong id="file-label">Escolher relatório Excel</strong><small>.xlsx ou .xls exportado do Qlik</small></span>
+        <span class="file-picker-arrow">›</span>
+      </label>
+      <label class="input-label" for="import-token">Chave para atualizar</label>
+      <input id="import-token" class="token-input" type="password" placeholder="Cole aqui o token do Cloudflare" autocomplete="off">
+      <p class="token-note">A consulta é pública. A chave é usada somente para enviar esta atualização e não fica salva no navegador.</p>
+      <div id="import-message" class="import-message" aria-live="polite"></div>
+      <button id="submit-import" class="button button--orange button--full" type="submit" disabled>
+        <span>Publicar atualização</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      </button>
+    </form>
+  </dialog>
+
+  <noscript>Ative o JavaScript para visualizar o painel.</noscript>
+</body>
+</html>

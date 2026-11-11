@@ -1,0 +1,15 @@
+{
+  "name": "painel-monitoramento-frota",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Painel público de monitoramento da frota, com atualização de dados protegida.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create painel-monitoramento-frota",
+    "db:migrate:remote": "wrangler d1 migrations apply FLEET_DB --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

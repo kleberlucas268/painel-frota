@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "painel-monitoramento-frota",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-11",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "FLEET_DB",
+      "database_name": "painel-monitoramento-frota",
+      "database_id": "PREENCHER_COM_ID_DO_D1",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
